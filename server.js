@@ -206,3 +206,10 @@ async function init() {
     throw e;
   }
 }
+
+init().catch((e) => {
+  console.error("========== STARTUP ERROR ==========");
+  console.error(e);
+  console.error(e.stack);
+  process.exit(1);
+});
