@@ -184,8 +184,9 @@ app.post("/api/withdrawals", auth, async (req,res) => {
   } finally { client.release(); }
 });
 
-app.get("*",(req,res) => res.sendFile(path.join(__dirname,"public","index.html")));
-
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 async function init() {
   try {
     const schema = fs.readFileSync(
