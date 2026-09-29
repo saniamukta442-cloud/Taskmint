@@ -187,14 +187,22 @@ app.post("/api/withdrawals", auth, async (req,res) => {
 app.get("*",(req,res) => res.sendFile(path.join(__dirname,"public","index.html")));
 
 async function init() {
-  const schema = fs.readFileSync(
-    path.join(__dirname, "schema.sql"),
-    "utf8"
-  );
+  try {
+    const schema = fs.readFileSync(
+      path.join(__dirname, "schema.sql"),
+      "utf8"
+    );
 
-  await pool.query(schema);
+    await pool.query(schema);
 
-  app.listen(PORT, () => {
-    console.log(`TaskMint running on port ${PORT}`);
-  });
+    console.log("Database ready");
+
+    app.listen(PORT, () => {
+      console.log(`TaskMint running on port ${PORT}`);
+    });
+
+  } catch (e) {
+    console.error("Init error:", e);
+    throw e;
+  }
 }
