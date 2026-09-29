@@ -1,5 +1,6 @@
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -186,7 +187,14 @@ app.post("/api/withdrawals", auth, async (req,res) => {
 app.get("*",(req,res) => res.sendFile(path.join(__dirname,"public","index.html")));
 
 async function init() {
+  const schema = fs.readFileSync(
+    path.join(__dirname, "schema.sql"),
+    "utf8"
+  );
+
   await pool.query(schema);
-  app.listen(PORT,()=>console.log(`TaskMint running on port ${PORT}`));
+
+  app.listen(PORT, () => {
+    console.log(`TaskMint running on port ${PORT}`);
+  });
 }
-init().catch(e=>{console.error("Startup error:",e);process.exit(1);});
