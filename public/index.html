@@ -1020,48 +1020,7 @@ Log out
 <div
   class="dashGrid"
   style="margin-top:18px">
-
-<div class="dashCard">
-
-<div class="muted">
-Available balance
-</div>
-
-<div class="balance">
-
-<span id="dashBalance">
-$0.00
-</span>
-
-</div>
-
-<div class="muted">
-Total earned:
-<span id="dashTotal">
-$0.00
-</span>
-</div>
-
-</div>
-
-<div class="dashCard">
-
-<div class="muted">
-Referral code
-</div>
-
-<h2 id="dashReferral">
-—
-</h2>
-
-<button
-  class="btn primary"
-  onclick="copyReferral()">
-Copy code
-</button>
-
-</div>
-
+  
 </div>
 
 <!-- EARNING CARDS -->
@@ -1168,82 +1127,6 @@ Checking bonus...
 </p>
 
 </div>
-
-</div>
-
-<!-- REFERRAL -->
-
-<div
-  class="dashCard"
-  style="margin-top:15px">
-
-<h2>
-👥 Referral Program
-</h2>
-
-<div class="rewardBox">
-
-  <div class="rewardRow">
-
-    <span>
-      Referral reward
-    </span>
-
-    <b class="positive">
-      +$5.00
-    </b>
-
-  </div>
-
-
-  <div class="rewardRow">
-
-    <span>
-      Your code
-    </span>
-
-    <b id="refCodeDash">
-      —
-    </b>
-
-  </div>
-
-
-  <div style="margin-top:15px;">
-
-    <input
-      id="referralLink"
-      type="text"
-      readonly
-      placeholder="Your referral link"
-      style="
-        width:100%;
-        padding:12px;
-        border-radius:10px;
-        border:1px solid #334155;
-        background:#020617;
-        color:white;
-      "
-    >
-
-    <button
-      onclick="copyReferralLink()"
-      style="
-        width:100%;
-        margin-top:8px;
-        padding:12px;
-        border:0;
-        border-radius:10px;
-        background:#22d3ee;
-        color:#001018;
-        font-weight:bold;
-        cursor:pointer;
-      "
-    >
-      📋 Copy Referral Link
-    </button>
-
-  </div>
 
 </div>
 
@@ -1681,13 +1564,7 @@ async function loadDashboard(){
       d.user.total_earned
     );
 
-    $("dashReferral").textContent =
-  d.user.referral_code;
-
-$("refCodeDash").textContent =
-  d.user.referral_code;
-
-setReferralLink(
+    setReferralLink(
   d.user.referral_code
 );
 
