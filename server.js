@@ -148,6 +148,93 @@ app.get("/api/activity", auth, async (req,res) => {
   }
 });
 
+app.get("/api/tasks", auth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      `SELECT id,title,description,reward,task_type
+       FROM tm_tasks
+       WHERE active=true
+       ORDER BY id ASC`
+    );
+
+    res.json({
+      ok: true,
+      tasks: r.rows
+    });
+  } catch (e) {
+    console.error("Tasks error:", e);
+    res.status(500).json({
+      ok: false,
+      error: "Could not load tasks."
+    });
+  }
+});
+
+app.post("/api/daily-bonus", auth, async (req, res) => {
+  const reward = 10;
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const claim = await client.query(
+      `INSERT INTO tm_daily_claims(user_id, claim_date, reward)
+       VALUES($1, CURRENT_DATE, $2)
+       ON CONFLICT (user_id, claim_date) DO NOTHING
+       RETURNING id`,
+      [req.auth.userId, reward]
+    );
+
+    if (!claim.rows.length) {
+      await client.query("ROLLBACK");
+
+      return res.status(409).json({
+        ok: false,
+        error: "Daily bonus already claimed today."
+      });
+    }
+
+    await client.query(
+      `UPDATE tm_users
+       SET balance = balance + $1,
+           total_earned = total_earned + $1
+       WHERE id=$2`,
+      [reward, req.auth.userId]
+    );
+
+    await client.query(
+      `INSERT INTO tm_transactions
+       (user_id,type,amount,description)
+       VALUES($1,'daily_bonus',$2,$3)`,
+      [
+        req.auth.userId,
+        reward,
+        "Daily bonus"
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      ok: true,
+      reward,
+      message: `You received ${reward} points.`
+    });
+
+  } catch (e) {
+    await client.query("ROLLBACK");
+
+    console.error("Daily bonus error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not claim daily bonus."
+    });
+  } finally {
+    client.release();
+  }
+});
+
 app.post("/api/withdrawals", auth, async (req,res) => {
   const { amount, method, accountNumber, accountName } = req.body || {};
   const value = Number(amount);
