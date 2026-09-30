@@ -528,6 +528,76 @@ nav{
   font-weight:900;
 }
 
+  /* =========================
+   WATCH VIDEO BUTTONS
+   ========================= */
+
+.adButton{
+  flex:1;
+  border:0;
+  border-radius:18px;
+  padding:16px 12px;
+  min-height:90px;
+
+  background:linear-gradient(
+    135deg,
+    #22d3ee,
+    #6366f1
+  );
+
+  color:#06111f;
+  font-size:20px;
+  font-weight:800;
+
+  cursor:pointer;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+
+  box-shadow:
+    0 8px 25px rgba(34,211,238,.18);
+
+  transition:
+    transform .15s ease,
+    box-shadow .15s ease;
+}
+
+.adButton span{
+  font-size:18px;
+  font-weight:800;
+}
+
+.adButton:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 12px 30px rgba(99,102,241,.28);
+}
+
+.adButton:active{
+  transform:scale(.97);
+}
+
+.adButton:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+  transform:none;
+}
+
+@media(max-width:600px){
+
+  .adButton{
+    min-height:86px;
+    font-size:18px;
+  }
+
+  .adButton span{
+    font-size:17px;
+  }
+}
+
 @media(max-width:760px){
 
   .links{
@@ -1031,17 +1101,16 @@ Each verified ad:
 </span>
 </div>
 
-</div>
-
 <div
   style="
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:10px;
-    margin-top:15px;
+    gap:18px;
+    margin-top:18px;
   ">
 
 <button
+  id="monetagBtn"
   class="adButton"
   onclick="watchMonetag()"
 >
@@ -1050,6 +1119,7 @@ Each verified ad:
 </button>
 
 <button
+  id="gigapubBtn"
   class="adButton"
   onclick="watchGigaPub()"
 >
