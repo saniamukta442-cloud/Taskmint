@@ -663,7 +663,6 @@ app.post(
 // MONETAG + GIGAPUB
 // =========================
 
-const AD_REWARD = 0.50;
 const DAILY_AD_LIMIT = 30;
 
 app.get(
