@@ -11,6 +11,8 @@ const app = express();
 
 const PORT = process.env.PORT || 10000;
 const JWT_SECRET = process.env.JWT_SECRET;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 // =========================
 // REWARD SETTINGS
@@ -72,6 +74,57 @@ function auth(req, res, next) {
     return res.status(401).json({
       ok: false,
       error: "Session expired. Please log in again."
+    });
+  }
+}
+
+// =========================
+// ADMIN AUTH
+// =========================
+
+function signAdminToken() {
+  return jwt.sign(
+    {
+      admin: true,
+      email: ADMIN_EMAIL
+    },
+    JWT_SECRET,
+    { expiresIn: "12h" }
+  );
+}
+
+function adminAuth(req, res, next) {
+  const header = req.headers.authorization || "";
+
+  const token = header.startsWith("Bearer ")
+    ? header.slice(7)
+    : null;
+
+  if (!token) {
+    return res.status(401).json({
+      ok: false,
+      error: "Admin login required."
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+
+    if (!decoded.admin) {
+      return res.status(403).json({
+        ok: false,
+        error: "Admin access denied."
+      });
+    }
+
+    req.admin = decoded;
+
+    next();
+
+  } catch {
+    return res.status(401).json({
+      ok: false,
+      error: "Admin session expired."
     });
   }
 }
@@ -434,6 +487,50 @@ app.get("/api/me", auth, async (req, res) => {
       error: "Could not load account."
     });
   }
+});
+
+// =========================
+// ADMIN LOGIN
+// =========================
+
+app.post("/api/admin/login", async (req, res) => {
+
+  const {
+    email,
+    password
+  } = req.body || {};
+
+  if (!email || !password) {
+    return res.status(400).json({
+      ok: false,
+      error: "Email and password are required."
+    });
+  }
+
+  if (
+    String(email).trim().toLowerCase() !==
+    String(ADMIN_EMAIL || "").trim().toLowerCase()
+  ) {
+    return res.status(401).json({
+      ok: false,
+      error: "Invalid admin credentials."
+    });
+  }
+
+  if (
+    String(password) !==
+    String(ADMIN_PASSWORD || "")
+  ) {
+    return res.status(401).json({
+      ok: false,
+      error: "Invalid admin credentials."
+    });
+  }
+
+  res.json({
+    ok: true,
+    token: signAdminToken()
+  });
 });
 
 // =========================
@@ -1084,6 +1181,298 @@ app.post(
       });
 
     } finally {
+      client.release();
+    }
+  }
+);
+
+// =====================================================
+// ADMIN - WITHDRAWAL MANAGEMENT
+// =====================================================
+
+// =========================
+// GET PENDING WITHDRAWALS
+// =========================
+
+app.get(
+  "/api/admin/withdrawals",
+  adminAuth,
+  async (req, res) => {
+
+    try {
+
+      const r = await pool.query(
+        `SELECT
+          w.id,
+          w.user_id,
+          w.amount,
+          w.method,
+          w.account_number,
+          w.account_name,
+          w.status,
+          w.created_at,
+          u.display_name,
+          u.email,
+          u.balance
+         FROM tm_withdrawals w
+         JOIN tm_users u
+           ON u.id = w.user_id
+         ORDER BY w.id DESC
+         LIMIT 200`
+      );
+
+      res.json({
+        ok: true,
+        items: r.rows
+      });
+
+    } catch (e) {
+
+      console.error(
+        "Admin withdrawals error:",
+        e
+      );
+
+      res.status(500).json({
+        ok: false,
+        error: "Could not load withdrawals."
+      });
+    }
+  }
+);
+
+
+// =========================
+// APPROVE WITHDRAWAL
+// =========================
+
+app.post(
+  "/api/admin/withdrawals/:id/approve",
+  adminAuth,
+  async (req, res) => {
+
+    const withdrawalId =
+      Number(req.params.id);
+
+    if (!Number.isInteger(withdrawalId)) {
+      return res.status(400).json({
+        ok: false,
+        error: "Invalid withdrawal ID."
+      });
+    }
+
+    const client =
+      await pool.connect();
+
+    try {
+
+      await client.query("BEGIN");
+
+      const r = await client.query(
+        `SELECT
+          id,
+          user_id,
+          amount,
+          status
+         FROM tm_withdrawals
+         WHERE id=$1
+         FOR UPDATE`,
+        [withdrawalId]
+      );
+
+      if (!r.rows.length) {
+
+        await client.query("ROLLBACK");
+
+        return res.status(404).json({
+          ok: false,
+          error: "Withdrawal not found."
+        });
+      }
+
+      const withdrawal = r.rows[0];
+
+      if (withdrawal.status !== "pending") {
+
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          ok: false,
+          error:
+            `Withdrawal is already ${withdrawal.status}.`
+        });
+      }
+
+      await client.query(
+        `UPDATE tm_withdrawals
+         SET
+           status='approved',
+           processed_at=CURRENT_TIMESTAMP
+         WHERE id=$1`,
+        [withdrawalId]
+      );
+
+      await client.query("COMMIT");
+
+      res.json({
+        ok: true,
+        message: "Withdrawal approved successfully."
+      });
+
+    } catch (e) {
+
+      await client.query("ROLLBACK");
+
+      console.error(
+        "Approve withdrawal error:",
+        e
+      );
+
+      res.status(500).json({
+        ok: false,
+        error: "Could not approve withdrawal."
+      });
+
+    } finally {
+
+      client.release();
+    }
+  }
+);
+
+
+// =========================
+// REJECT WITHDRAWAL
+// REFUND USER BALANCE
+// =========================
+
+app.post(
+  "/api/admin/withdrawals/:id/reject",
+  adminAuth,
+  async (req, res) => {
+
+    const withdrawalId =
+      Number(req.params.id);
+
+    if (!Number.isInteger(withdrawalId)) {
+      return res.status(400).json({
+        ok: false,
+        error: "Invalid withdrawal ID."
+      });
+    }
+
+    const client =
+      await pool.connect();
+
+    try {
+
+      await client.query("BEGIN");
+
+      const r = await client.query(
+        `SELECT
+          id,
+          user_id,
+          amount,
+          status,
+          method
+         FROM tm_withdrawals
+         WHERE id=$1
+         FOR UPDATE`,
+        [withdrawalId]
+      );
+
+      if (!r.rows.length) {
+
+        await client.query("ROLLBACK");
+
+        return res.status(404).json({
+          ok: false,
+          error: "Withdrawal not found."
+        });
+      }
+
+      const withdrawal = r.rows[0];
+
+      if (withdrawal.status !== "pending") {
+
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          ok: false,
+          error:
+            `Withdrawal is already ${withdrawal.status}.`
+        });
+      }
+
+      // Return money to user
+      await client.query(
+        `UPDATE tm_users
+         SET balance = balance + $1
+         WHERE id=$2`,
+        [
+          withdrawal.amount,
+          withdrawal.user_id
+        ]
+      );
+
+      // Mark withdrawal rejected
+      await client.query(
+        `UPDATE tm_withdrawals
+         SET
+           status='rejected',
+           processed_at=CURRENT_TIMESTAMP
+         WHERE id=$1`,
+        [withdrawalId]
+      );
+
+      // Activity record
+      await client.query(
+        `INSERT INTO tm_transactions
+         (
+           user_id,
+           type,
+           amount,
+           description
+         )
+         VALUES
+         (
+           $1,
+           'withdrawal_refund',
+           $2,
+           $3
+         )`,
+        [
+          withdrawal.user_id,
+          withdrawal.amount,
+          `Withdrawal rejected - ${withdrawal.method}`
+        ]
+      );
+
+      await client.query("COMMIT");
+
+      res.json({
+        ok: true,
+        message:
+          "Withdrawal rejected and balance refunded."
+      });
+
+    } catch (e) {
+
+      await client.query("ROLLBACK");
+
+      console.error(
+        "Reject withdrawal error:",
+        e
+      );
+
+      res.status(500).json({
+        ok: false,
+        error:
+          "Could not reject withdrawal."
+      });
+
+    } finally {
+
       client.release();
     }
   }
