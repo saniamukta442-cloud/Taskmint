@@ -1141,6 +1141,40 @@ Your code
 —
 </b>
 
+  <div style="margin-top:15px;">
+
+  <input
+    id="referralLink"
+    type="text"
+    readonly
+    placeholder="Your referral link"
+    style="
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid #334155;
+      background:#020617;
+      color:white;
+    "
+  >
+
+  <button
+    onclick="copyReferralLink()"
+    style="
+      width:100%;
+      margin-top:8px;
+      padding:12px;
+      border:0;
+      border-radius:10px;
+      background:#22d3ee;
+      font-weight:bold;
+    "
+  >
+    📋 Copy Referral Link
+  </button>
+
+</div>
+  
 </div>
 
 </div>
@@ -1475,10 +1509,17 @@ async function submitAuth(){
           "Content-Type":
             "application/json"
         },
-        body:
-          JSON.stringify(payload)
-      }
-    );
+        const referralCode =
+  localStorage.getItem(
+    "taskmint_referral"
+  ) || "";
+
+body: JSON.stringify({
+  email,
+  password,
+  displayName,
+  referralCode
+})
 
     const d =
       await r.json();
@@ -2337,6 +2378,92 @@ if(token){
 
 }
 
+  // =========================
+// REFERRAL LINK
+// =========================
+
+function makeReferralLink(referralCode) {
+
+  return `${window.location.origin}/?ref=${encodeURIComponent(referralCode)}`;
+
+}
+
+
+function setReferralLink(referralCode) {
+
+  const input =
+    document.getElementById("referralLink");
+
+  if (!input || !referralCode) {
+    return;
+  }
+
+  input.value =
+    makeReferralLink(referralCode);
+
+}
+
+
+async function copyReferralLink() {
+
+  const input =
+    document.getElementById("referralLink");
+
+  if (!input || !input.value) {
+    return;
+  }
+
+  try {
+
+    await navigator.clipboard.writeText(
+      input.value
+    );
+
+    alert("Referral link copied!");
+
+  } catch {
+
+    input.select();
+
+    document.execCommand("copy");
+
+    alert("Referral link copied!");
+  }
+
+}
+
+
+// =========================
+// GET REFERRAL FROM URL
+// =========================
+
+function getReferralCodeFromURL() {
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  return (
+    params.get("ref") || ""
+  ).trim().toUpperCase();
+
+}
+
+
+const referralFromURL =
+  getReferralCodeFromURL();
+
+
+if (referralFromURL) {
+
+  localStorage.setItem(
+    "taskmint_referral",
+    referralFromURL
+  );
+
+}
+  
 </script>
 
 </body>
