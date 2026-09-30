@@ -2,6 +2,16 @@
 <html lang="en">
 
 <head>
+  <script
+  src="//libtl.com/sdk.js"
+  data-zone="11762706"
+  data-sdk="show_11762706"
+  async>
+</script>
+
+<script
+  src="https://ad.gigapub.tech/script?id=8285">
+</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
@@ -1001,30 +1011,64 @@ Copy code
 <div class="adInfo">
 
 <div class="muted">
-Verified ad reward
+Today's ads
 </div>
 
-<div class="adReward">
+<div
+  id="adCounter"
+  style="
+    font-size:28px;
+    font-weight:900;
+    margin:5px 0;
+  ">
+0 / 30
+</div>
+
+<div class="muted">
+Each verified ad:
+<span class="adReward">
 +$0.50
+</span>
 </div>
 
-<p class="notice">
-Ad provider verification is required before
-the $0.50 reward is credited.
-</p>
-
 </div>
+
+<div
+  style="
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:15px;
+  ">
 
 <button
   class="btn primary"
-  style="margin-top:12px"
-  onclick="showAdMessage()">
-Watch Ad
+  id="monetagBtn"
+  onclick="watchMonetag()">
+
+🟣 Monetag
+<br>
++$0.50
+
 </button>
+
+<button
+  class="btn primary"
+  id="gigapubBtn"
+  onclick="watchGigaPub()">
+
+🟢 GigaPub
+<br>
++$0.50
+
+</button>
+
+</div>
 
 <p
   id="adNotice"
   class="notice">
+Choose an ad provider to earn $0.50.
 </p>
 
 </div>
@@ -1532,6 +1576,8 @@ async function loadDashboard(){
 
     await loadDailyBonusStatus();
 
+    await loadAdStatus();
+
   }catch(e){
 
     localStorage.removeItem(
@@ -1769,17 +1815,374 @@ async function claimDailyBonus(){
 }
 
 // ======================================
-// AD MESSAGE
+// WATCH & EARN
+// MONETAG + GIGAPUB
 // ======================================
 
-function showAdMessage(){
+let adBusy = false;
 
-  $("adNotice").innerHTML =
-    `<span class="notice">
-      The ad provider must confirm a valid
-      ad completion before $0.50 is credited.
-      The reward is not added just by clicking.
-    </span>`;
+
+// Load today's ad status
+async function loadAdStatus(){
+
+  try{
+
+    const r =
+      await fetch(
+        "/api/ad-status",
+        {
+          headers:{
+            Authorization:
+              "Bearer " + token
+          }
+        }
+      );
+
+    const d =
+      await r.json();
+
+    if(!r.ok || !d.ok){
+      throw new Error(
+        d.error ||
+        "Could not load ad status."
+      );
+    }
+
+    updateAdUI(
+      d.watched,
+      d.limit,
+      d.remaining
+    );
+
+  }catch(e){
+
+    $("adNotice").textContent =
+      "Could not load ad limit.";
+  }
+}
+
+
+// Update buttons
+function updateAdUI(
+  watched,
+  limit,
+  remaining
+){
+
+  $("adCounter").textContent =
+    `${watched} / ${limit}`;
+
+  if(remaining <= 0){
+
+    $("monetagBtn").disabled =
+      true;
+
+    $("gigapubBtn").disabled =
+      true;
+
+    $("monetagBtn").innerHTML =
+      "🟣 Limit Reached";
+
+    $("gigapubBtn").innerHTML =
+      "🟢 Limit Reached";
+
+    $("adNotice").innerHTML =
+      `<span class="success">
+        ✓ Today's 30-ad limit has been reached.
+      </span>`;
+
+  }else{
+
+    $("monetagBtn").disabled =
+      false;
+
+    $("gigapubBtn").disabled =
+      false;
+
+    $("monetagBtn").innerHTML =
+      "🟣 Monetag<br>+$0.50";
+
+    $("gigapubBtn").innerHTML =
+      "🟢 GigaPub<br>+$0.50";
+  }
+}
+
+
+// Claim reward from backend
+async function creditAdReward(
+  provider
+){
+
+  const r =
+    await fetch(
+      "/api/ad-reward",
+      {
+        method:"POST",
+
+        headers:{
+          "Content-Type":
+            "application/json",
+
+          Authorization:
+            "Bearer " + token
+        },
+
+        body:
+          JSON.stringify({
+            provider
+          })
+      }
+    );
+
+  const d =
+    await r.json();
+
+  if(!r.ok || !d.ok){
+
+    throw new Error(
+      d.error ||
+      "Reward could not be added."
+    );
+  }
+
+  return d;
+}
+
+
+// Monetag
+async function watchMonetag(){
+
+  if(adBusy) return;
+
+  adBusy = true;
+
+  $("monetagBtn").disabled =
+    true;
+
+  $("gigapubBtn").disabled =
+    true;
+
+  $("adNotice").textContent =
+    "Loading Monetag ad...";
+
+  try{
+
+    const status =
+      await fetch(
+        "/api/ad-status",
+        {
+          headers:{
+            Authorization:
+              "Bearer " + token
+          }
+        }
+      );
+
+    const s =
+      await status.json();
+
+    if(
+      !s.ok ||
+      s.remaining <= 0
+    ){
+
+      throw new Error(
+        "Today's 30-ad limit has been reached."
+      );
+    }
+
+
+    const fn =
+      window.show_11762706;
+
+    if(
+      typeof fn !==
+      "function"
+    ){
+
+      throw new Error(
+        "Monetag ad is not ready yet. Please try again."
+      );
+    }
+
+
+    $("adNotice").textContent =
+      "Please complete the Monetag ad...";
+
+
+    // Show rewarded ad
+    await fn();
+
+
+    // Ad completed
+    const reward =
+      await creditAdReward(
+        "monetag"
+      );
+
+
+    setMoney(
+      "dashBalance",
+      reward.balance
+    );
+
+    setMoney(
+      "dashTotal",
+      reward.totalEarned
+    );
+
+
+    $("adNotice").innerHTML =
+      `<span class="success">
+        ✓ Monetag ad completed.
+        +$0.50 added.
+      </span>`;
+
+
+    updateAdUI(
+      reward.watched,
+      reward.limit,
+      reward.remaining
+    );
+
+
+    await loadActivity();
+
+
+  }catch(e){
+
+    $("adNotice").innerHTML =
+      `<span class="error">
+        ❌ ${escapeHtml(
+          e.message
+        )}
+      </span>`;
+
+    await loadAdStatus();
+
+  }finally{
+
+    adBusy = false;
+
+    await loadAdStatus();
+  }
+}
+
+
+// GigaPub
+async function watchGigaPub(){
+
+  if(adBusy) return;
+
+  adBusy = true;
+
+  $("monetagBtn").disabled =
+    true;
+
+  $("gigapubBtn").disabled =
+    true;
+
+  $("adNotice").textContent =
+    "Loading GigaPub ad...";
+
+  try{
+
+    const status =
+      await fetch(
+        "/api/ad-status",
+        {
+          headers:{
+            Authorization:
+              "Bearer " + token
+          }
+        }
+      );
+
+    const s =
+      await status.json();
+
+    if(
+      !s.ok ||
+      s.remaining <= 0
+    ){
+
+      throw new Error(
+        "Today's 30-ad limit has been reached."
+      );
+    }
+
+
+    if(
+      typeof window.showGiga !==
+      "function"
+    ){
+
+      throw new Error(
+        "GigaPub ad is not ready yet. Please try again."
+      );
+    }
+
+
+    $("adNotice").textContent =
+      "Please complete the GigaPub ad...";
+
+
+    // Show rewarded GigaPub ad
+    await window.showGiga();
+
+
+    // Ad completed
+    const reward =
+      await creditAdReward(
+        "gigapub"
+      );
+
+
+    setMoney(
+      "dashBalance",
+      reward.balance
+    );
+
+    setMoney(
+      "dashTotal",
+      reward.totalEarned
+    );
+
+
+    $("adNotice").innerHTML =
+      `<span class="success">
+        ✓ GigaPub ad completed.
+        +$0.50 added.
+      </span>`;
+
+
+    updateAdUI(
+      reward.watched,
+      reward.limit,
+      reward.remaining
+    );
+
+
+    await loadActivity();
+
+
+  }catch(e){
+
+    $("adNotice").innerHTML =
+      `<span class="error">
+        ❌ ${escapeHtml(
+          e.message
+        )}
+      </span>`;
+
+    await loadAdStatus();
+
+  }finally{
+
+    adBusy = false;
+
+    await loadAdStatus();
+  }
 }
 
 // ======================================
