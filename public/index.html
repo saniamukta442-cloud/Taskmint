@@ -1119,69 +1119,67 @@ Checking bonus...
 
 <div class="rewardBox">
 
-<div class="rewardRow">
+  <div class="rewardRow">
 
-<span>
-Referral reward
-</span>
+    <span>
+      Referral reward
+    </span>
 
-<b class="positive">
-+$5.00
-</b>
+    <b class="positive">
+      +$5.00
+    </b>
 
-</div>
+  </div>
 
-<div class="rewardRow">
 
-<span>
-Your code
-</span>
+  <div class="rewardRow">
 
-<b id="refCodeDash">
-—
-</b>
+    <span>
+      Your code
+    </span>
+
+    <b id="refCodeDash">
+      —
+    </b>
+
+  </div>
+
 
   <div style="margin-top:15px;">
 
-  <input
-    id="referralLink"
-    type="text"
-    readonly
-    placeholder="Your referral link"
-    style="
-      width:100%;
-      padding:12px;
-      border-radius:10px;
-      border:1px solid #334155;
-      background:#020617;
-      color:white;
-    "
-  >
+    <input
+      id="referralLink"
+      type="text"
+      readonly
+      placeholder="Your referral link"
+      style="
+        width:100%;
+        padding:12px;
+        border-radius:10px;
+        border:1px solid #334155;
+        background:#020617;
+        color:white;
+      "
+    >
 
-  <button
-    onclick="copyReferralLink()"
-    style="
-      width:100%;
-      margin-top:8px;
-      padding:12px;
-      border:0;
-      border-radius:10px;
-      background:#22d3ee;
-      font-weight:bold;
-    "
-  >
-    📋 Copy Referral Link
-  </button>
+    <button
+      onclick="copyReferralLink()"
+      style="
+        width:100%;
+        margin-top:8px;
+        padding:12px;
+        border:0;
+        border-radius:10px;
+        background:#22d3ee;
+        color:#001018;
+        font-weight:bold;
+        cursor:pointer;
+      "
+    >
+      📋 Copy Referral Link
+    </button>
 
-</div>
-  
-</div>
-
-</div>
-
-<p class="muted">
-Give your referral code to a new user.
-</p>
+  </div>
 
 </div>
 
@@ -1490,8 +1488,17 @@ async function submitAuth(){
     payload.displayName =
       $("name").value;
 
+    // যদি referral link থেকে user আসে,
+    // সেই code automatically ব্যবহার হবে।
+    const savedReferral =
+      localStorage.getItem(
+        "taskmint_referral"
+      ) || "";
+
+    // Referral link-এর code থাকলে সেটাই priority
     payload.referralCode =
-      $("refCode").value;
+      savedReferral ||
+      $("refCode").value.trim();
   }
 
   $("authNotice").textContent =
@@ -1505,26 +1512,21 @@ async function submitAuth(){
         : "/api/login",
       {
         method:"POST",
+
         headers:{
           "Content-Type":
             "application/json"
         },
-        const referralCode =
-  localStorage.getItem(
-    "taskmint_referral"
-  ) || "";
 
-body: JSON.stringify({
-  email,
-  password,
-  displayName,
-  referralCode
-})
+        body: JSON.stringify(payload)
+      }
+    );
 
     const d =
       await r.json();
 
     if(!r.ok || !d.ok){
+
       throw new Error(
         d.error ||
         "Request failed"
@@ -1537,6 +1539,14 @@ body: JSON.stringify({
       "taskmint_token",
       token
     );
+
+    // Registration সফল হলে referral code
+    // আর দরকার নেই
+    if(authMode === "register"){
+      localStorage.removeItem(
+        "taskmint_referral"
+      );
+    }
 
     closeModal(
       "authModal"
@@ -1608,10 +1618,14 @@ async function loadDashboard(){
     );
 
     $("dashReferral").textContent =
-      d.user.referral_code;
+  d.user.referral_code;
 
-    $("refCodeDash").textContent =
-      d.user.referral_code;
+$("refCodeDash").textContent =
+  d.user.referral_code;
+
+setReferralLink(
+  d.user.referral_code
+);
 
     await loadActivity();
 
