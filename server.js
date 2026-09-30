@@ -658,16 +658,267 @@ app.post(
 //
 // =====================================================
 
+// =========================
+// WATCH & EARN
+// MONETAG + GIGAPUB
+// =========================
+
+const AD_REWARD = 0.50;
+const DAILY_AD_LIMIT = 30;
+
+app.get(
+  "/api/ad-status",
+  auth,
+  async (req, res) => {
+
+    try {
+
+      const r = await pool.query(
+        `SELECT COUNT(*)::int AS count
+         FROM tm_transactions
+         WHERE user_id=$1
+           AND type='ad_reward'
+           AND created_at >= CURRENT_DATE
+           AND created_at < CURRENT_DATE + INTERVAL '1 day'`,
+        [req.auth.userId]
+      );
+
+      const count = Number(r.rows[0].count || 0);
+
+      res.json({
+        ok: true,
+        watched: count,
+        limit: DAILY_AD_LIMIT,
+        remaining: Math.max(
+          0,
+          DAILY_AD_LIMIT - count
+        ),
+        reward: AD_REWARD
+      });
+
+    } catch (e) {
+
+      console.error(
+        "Ad status error:",
+        e
+      );
+
+      res.status(500).json({
+        ok: false,
+        error: "Could not load ad status."
+      });
+    }
+  }
+);
+
+
+// =========================
+// CREDIT VERIFIED AD
+// =========================
+
 app.post(
   "/api/ad-reward",
   auth,
   async (req, res) => {
 
-    return res.status(400).json({
-      ok: false,
-      error:
-        "Ad verification is not connected yet. Connect the ad provider callback before awarding $0.50."
-    });
+    const provider =
+      String(
+        req.body?.provider || ""
+      ).toLowerCase();
+
+    if (
+      !["monetag", "gigapub"]
+        .includes(provider)
+    ) {
+
+      return res.status(400).json({
+        ok: false,
+        error:
+          "Invalid ad provider."
+      });
+    }
+
+    const client =
+      await pool.connect();
+
+    try {
+
+      await client.query(
+        "BEGIN"
+      );
+
+      // Lock this user
+      const user =
+        await client.query(
+          `SELECT id,balance,total_earned
+           FROM tm_users
+           WHERE id=$1
+           FOR UPDATE`,
+          [req.auth.userId]
+        );
+
+      if (!user.rows.length) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(404).json({
+          ok: false,
+          error:
+            "User not found."
+        });
+      }
+
+
+      // Count today's rewarded ads
+      const countResult =
+        await client.query(
+          `SELECT COUNT(*)::int AS count
+           FROM tm_transactions
+           WHERE user_id=$1
+             AND type='ad_reward'
+             AND created_at >= CURRENT_DATE
+             AND created_at < CURRENT_DATE + INTERVAL '1 day'`,
+          [req.auth.userId]
+        );
+
+      const todayCount =
+        Number(
+          countResult.rows[0].count || 0
+        );
+
+
+      // Daily limit
+      if (
+        todayCount >=
+        DAILY_AD_LIMIT
+      ) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(400).json({
+          ok: false,
+          error:
+            `Daily ad limit reached. Maximum ${DAILY_AD_LIMIT} ads per day.`
+        });
+      }
+
+
+      // Add $0.50
+      await client.query(
+        `UPDATE tm_users
+         SET
+           balance = balance + $1,
+           total_earned = total_earned + $1
+         WHERE id=$2`,
+        [
+          AD_REWARD,
+          req.auth.userId
+        ]
+      );
+
+
+      // Activity
+      await client.query(
+        `INSERT INTO tm_transactions
+         (
+           user_id,
+           type,
+           amount,
+           description
+         )
+         VALUES
+         (
+           $1,
+           'ad_reward',
+           $2,
+           $3
+         )`,
+        [
+          req.auth.userId,
+          AD_REWARD,
+          `${provider === "monetag"
+            ? "Monetag"
+            : "GigaPub"} ad reward`
+        ]
+      );
+
+
+      const updated =
+        await client.query(
+          `SELECT
+             balance,
+             total_earned
+           FROM tm_users
+           WHERE id=$1`,
+          [req.auth.userId]
+        );
+
+
+      await client.query(
+        "COMMIT"
+      );
+
+
+      const newCount =
+        todayCount + 1;
+
+
+      res.json({
+        ok: true,
+
+        provider,
+
+        reward: AD_REWARD,
+
+        watched:
+          newCount,
+
+        limit:
+          DAILY_AD_LIMIT,
+
+        remaining:
+          Math.max(
+            0,
+            DAILY_AD_LIMIT -
+            newCount
+          ),
+
+        balance:
+          updated.rows[0].balance,
+
+        totalEarned:
+          updated.rows[0].total_earned,
+
+        message:
+          `+$${AD_REWARD.toFixed(2)} added.`
+      });
+
+
+    } catch (e) {
+
+      await client.query(
+        "ROLLBACK"
+      );
+
+      console.error(
+        "Ad reward error:",
+        e
+      );
+
+      res.status(500).json({
+        ok: false,
+        error:
+          "Could not add ad reward."
+      });
+
+    } finally {
+
+      client.release();
+    }
   }
 );
 
