@@ -79,28 +79,19 @@ CREATE TABLE IF NOT EXISTS tm_withdrawals (
 
 CREATE TABLE IF NOT EXISTS tm_tasks (
   id SERIAL PRIMARY KEY,
-
   title VARCHAR(120) NOT NULL,
-
   description TEXT,
-
   reward NUMERIC(12,2) NOT NULL DEFAULT 0,
+  task_type VARCHAR(40) NOT NULL DEFAULT 'ad',
 
-  task_type VARCHAR(40) NOT NULL DEFAULT 'task',
-
-  provider VARCHAR(50),
-
+  provider VARCHAR(80) NOT NULL DEFAULT 'internal',
   provider_task_id VARCHAR(255),
-
-  icon VARCHAR(20) DEFAULT '🎯',
-
-  active BOOLEAN NOT NULL DEFAULT true,
-
+  icon VARCHAR(20) NOT NULL DEFAULT '🎯',
   daily_limit INTEGER,
 
+  active BOOLEAN NOT NULL DEFAULT true,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
 
 -- =========================
 -- TASK COMPLETIONS
@@ -119,15 +110,16 @@ CREATE TABLE IF NOT EXISTS tm_task_completions (
 
   reward NUMERIC(12,2) NOT NULL,
 
-  status VARCHAR(20) NOT NULL DEFAULT 'pending',
-
   provider_reference VARCHAR(255),
 
-  started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
 
+  started_at TIMESTAMP,
   completed_at TIMESTAMP,
 
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+  UNIQUE(user_id, task_id, provider_reference)
 );
 
 
