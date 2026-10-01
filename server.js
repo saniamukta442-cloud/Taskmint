@@ -2362,28 +2362,30 @@ app.post(
   }
 );
 
-
+    
 /* =========================================================
    DATABASE INITIALIZATION / MIGRATION
 ========================================================= */
 
 async function init() {
+
   try {
 
     console.log("Starting database initialization...");
 
-    /*
-      1. Test database connection
-    */
+
+    /* =====================================================
+       1. DATABASE CONNECTION
+    ===================================================== */
 
     await pool.query("SELECT 1");
 
     console.log("Database connection OK.");
 
 
-    /*
-      2. Run schema.sql
-    */
+    /* =====================================================
+       2. LOAD SCHEMA
+    ===================================================== */
 
     const schemaPath = path.join(
       __dirname,
@@ -2391,9 +2393,11 @@ async function init() {
     );
 
     if (!fs.existsSync(schemaPath)) {
+
       throw new Error(
         "schema.sql was not found."
       );
+
     }
 
     const schema = fs.readFileSync(
@@ -2402,7 +2406,9 @@ async function init() {
     );
 
     if (schema.trim()) {
+
       await pool.query(schema);
+
     }
 
     console.log(
@@ -2410,47 +2416,89 @@ async function init() {
     );
 
 
-    /*
-      3. Make sure task table exists
-    */
+    /* =====================================================
+       3. VERIFY REQUIRED TABLES
+    ===================================================== */
 
-    const taskTable = await pool.query(`
-      SELECT to_regclass('public.tm_tasks') AS table_name
+    const tables = await pool.query(`
+      SELECT
+        to_regclass('public.tm_users') AS users,
+        to_regclass('public.tm_transactions') AS transactions,
+        to_regclass('public.tm_withdrawals') AS withdrawals,
+        to_regclass('public.tm_tasks') AS tasks,
+        to_regclass('public.tm_task_completions') AS completions,
+        to_regclass('public.tm_daily_claims') AS daily_claims
     `);
 
-    if (!taskTable.rows[0].table_name) {
+    const dbTables = tables.rows[0];
+
+    if (!dbTables.users) {
       throw new Error(
-        "tm_tasks table does not exist after schema initialization."
+        "tm_users table does not exist."
+      );
+    }
+
+    if (!dbTables.transactions) {
+      throw new Error(
+        "tm_transactions table does not exist."
+      );
+    }
+
+    if (!dbTables.withdrawals) {
+      throw new Error(
+        "tm_withdrawals table does not exist."
+      );
+    }
+
+    if (!dbTables.tasks) {
+      throw new Error(
+        "tm_tasks table does not exist."
+      );
+    }
+
+    if (!dbTables.completions) {
+      throw new Error(
+        "tm_task_completions table does not exist."
+      );
+    }
+
+    if (!dbTables.daily_claims) {
+      throw new Error(
+        "tm_daily_claims table does not exist."
       );
     }
 
     console.log(
-      "tm_tasks table confirmed."
+      "Required database tables confirmed."
     );
 
 
-    /*
-      4. TASK TABLE MIGRATION
-    */
+    /* =====================================================
+       4. TASK TABLE MIGRATION
+    ===================================================== */
 
     console.log(
       "Running task database migration..."
     );
+
 
     await pool.query(`
       ALTER TABLE tm_tasks
       ADD COLUMN IF NOT EXISTS provider VARCHAR(80)
     `);
 
+
     await pool.query(`
       ALTER TABLE tm_tasks
       ADD COLUMN IF NOT EXISTS provider_task_id VARCHAR(255)
     `);
 
+
     await pool.query(`
       ALTER TABLE tm_tasks
       ADD COLUMN IF NOT EXISTS icon VARCHAR(20)
     `);
+
 
     await pool.query(`
       ALTER TABLE tm_tasks
@@ -2458,19 +2506,39 @@ async function init() {
     `);
 
 
-    /*
-      5. TASK COMPLETION MIGRATION
-    */
+    await pool.query(`
+      ALTER TABLE tm_tasks
+      ADD COLUMN IF NOT EXISTS active BOOLEAN
+    `);
+
+
+    await pool.query(`
+      ALTER TABLE tm_tasks
+      ADD COLUMN IF NOT EXISTS created_at TIMESTAMP
+    `);
+
+
+    /* =====================================================
+       5. TASK COMPLETION MIGRATION
+    ===================================================== */
+
+    await pool.query(`
+      ALTER TABLE tm_task_completions
+      ADD COLUMN IF NOT EXISTS provider_reference VARCHAR(255)
+    `);
+
 
     await pool.query(`
       ALTER TABLE tm_task_completions
       ADD COLUMN IF NOT EXISTS status VARCHAR(20)
     `);
 
+
     await pool.query(`
       ALTER TABLE tm_task_completions
       ADD COLUMN IF NOT EXISTS started_at TIMESTAMP
     `);
+
 
     await pool.query(`
       ALTER TABLE tm_task_completions
@@ -2478,9 +2546,15 @@ async function init() {
     `);
 
 
-    /*
-      6. Set defaults for old rows
-    */
+    await pool.query(`
+      ALTER TABLE tm_task_completions
+      ADD COLUMN IF NOT EXISTS created_at TIMESTAMP
+    `);
+
+
+    /* =====================================================
+       6. FIX OLD DATA
+    ===================================================== */
 
     await pool.query(`
       UPDATE tm_tasks
@@ -2488,11 +2562,20 @@ async function init() {
       WHERE provider IS NULL
     `);
 
+
     await pool.query(`
       UPDATE tm_tasks
       SET icon = '🎯'
       WHERE icon IS NULL
     `);
+
+
+    await pool.query(`
+      UPDATE tm_tasks
+      SET active = true
+      WHERE active IS NULL
+    `);
+
 
     await pool.query(`
       UPDATE tm_task_completions
@@ -2501,9 +2584,9 @@ async function init() {
     `);
 
 
-    /*
-      7. Verify provider column REALLY exists
-    */
+    /* =====================================================
+       7. VERIFY PROVIDER COLUMN
+    ===================================================== */
 
     const providerCheck = await pool.query(`
       SELECT column_name
@@ -2513,54 +2596,277 @@ async function init() {
         AND column_name = 'provider'
     `);
 
+
     if (!providerCheck.rows.length) {
+
       throw new Error(
         "Migration failed: tm_tasks.provider column was not created."
       );
+
     }
+
 
     console.log(
       "tm_tasks.provider column confirmed."
     );
 
 
-    /*
-      8. Create default Watch & Earn task
-         only if no ad task exists
-    */
+    /* =====================================================
+       8. VERIFY OTHER TASK COLUMNS
+    ===================================================== */
 
-    await pool.query(`
-      INSERT INTO tm_tasks
-      (
-        title,
-        description,
-        reward,
-        task_type,
-        provider,
-        provider_task_id,
-        icon,
-        active
-      )
-      SELECT
-        'Watch & Earn',
-        'Watch an eligible sponsored activity and receive the verified reward.',
-        0.50,
-        'ad',
-        'internal',
-        NULL,
-        '🎬',
-        true
-      WHERE NOT EXISTS (
-        SELECT 1
-        FROM tm_tasks
-        WHERE task_type = 'ad'
-      )
+    const taskColumns = await pool.query(`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'tm_tasks'
+        AND column_name IN (
+          'provider',
+          'provider_task_id',
+          'icon',
+          'daily_limit',
+          'active'
+        )
+      ORDER BY column_name
     `);
 
 
-    /*
-      9. Database ready
-    */
+    console.log(
+      "Task columns available:",
+      taskColumns.rows
+        .map(row => row.column_name)
+        .join(", ")
+    );
+
+
+    /* =====================================================
+       9. CREATE DEFAULT WATCH & EARN TASK
+    ===================================================== */
+
+    const adTask = await pool.query(`
+      SELECT id
+      FROM tm_tasks
+      WHERE task_type = 'ad'
+      ORDER BY id ASC
+      LIMIT 1
+    `);
+
+
+    if (!adTask.rows.length) {
+
+      await pool.query(`
+        INSERT INTO tm_tasks
+        (
+          title,
+          description,
+          reward,
+          task_type,
+          provider,
+          provider_task_id,
+          icon,
+          daily_limit,
+          active
+        )
+        VALUES
+        (
+          'Watch & Earn',
+          'Watch an eligible sponsored activity and receive the verified reward.',
+          $1,
+          'ad',
+          'internal',
+          NULL,
+          '🎬',
+          $2,
+          true
+        )
+      `, [
+        AD_REWARD,
+        DAILY_AD_LIMIT
+      ]);
+
+
+      console.log(
+        "Default Watch & Earn task created."
+      );
+
+    } else {
+
+      console.log(
+        "Watch & Earn task already exists."
+      );
+
+    }
+
+
+    /* =====================================================
+       10. CREATE DEFAULT APP TASK
+    ===================================================== */
+
+    const appTask = await pool.query(`
+      SELECT id
+      FROM tm_tasks
+      WHERE task_type = 'app'
+      ORDER BY id ASC
+      LIMIT 1
+    `);
+
+
+    if (!appTask.rows.length) {
+
+      await pool.query(`
+        INSERT INTO tm_tasks
+        (
+          title,
+          description,
+          reward,
+          task_type,
+          provider,
+          provider_task_id,
+          icon,
+          active
+        )
+        VALUES
+        (
+          'Daily App Task',
+          'Complete the available activity according to the task instructions.',
+          1.00,
+          'app',
+          'internal',
+          NULL,
+          '📱',
+          true
+        )
+      `);
+
+
+      console.log(
+        "Default App task created."
+      );
+
+    }
+
+
+    /* =====================================================
+       11. CREATE DEFAULT GAME TASK
+    ===================================================== */
+
+    const gameTask = await pool.query(`
+      SELECT id
+      FROM tm_tasks
+      WHERE task_type = 'game'
+      ORDER BY id ASC
+      LIMIT 1
+    `);
+
+
+    if (!gameTask.rows.length) {
+
+      await pool.query(`
+        INSERT INTO tm_tasks
+        (
+          title,
+          description,
+          reward,
+          task_type,
+          provider,
+          provider_task_id,
+          icon,
+          active
+        )
+        VALUES
+        (
+          'Game Offer',
+          'Complete the game offer requirements to receive the verified reward.',
+          2.00,
+          'game',
+          'internal',
+          NULL,
+          '🎮',
+          true
+        )
+      `);
+
+
+      console.log(
+        "Default Game task created."
+      );
+
+    }
+
+
+    /* =====================================================
+       12. CREATE DEFAULT SURVEY TASK
+    ===================================================== */
+
+    const surveyTask = await pool.query(`
+      SELECT id
+      FROM tm_tasks
+      WHERE task_type = 'survey'
+      ORDER BY id ASC
+      LIMIT 1
+    `);
+
+
+    if (!surveyTask.rows.length) {
+
+      await pool.query(`
+        INSERT INTO tm_tasks
+        (
+          title,
+          description,
+          reward,
+          task_type,
+          provider,
+          provider_task_id,
+          icon,
+          active
+        )
+        VALUES
+        (
+          'Survey',
+          'Complete an eligible survey and wait for verification.',
+          1.50,
+          'survey',
+          'internal',
+          NULL,
+          '📝',
+          true
+        )
+      `);
+
+
+      console.log(
+        "Default Survey task created."
+      );
+
+    }
+
+
+    /* =====================================================
+       13. FINAL DATABASE CHECK
+    ===================================================== */
+
+    const finalCheck = await pool.query(`
+      SELECT
+        id,
+        title,
+        reward,
+        task_type,
+        provider,
+        active
+      FROM tm_tasks
+      ORDER BY id ASC
+    `);
+
+
+    console.log(
+      `Task database check: ${finalCheck.rows.length} task(s) found.`
+    );
+
+
+    /* =====================================================
+       14. DATABASE READY
+    ===================================================== */
 
     console.log(
       "Database migration completed."
@@ -2571,9 +2877,9 @@ async function init() {
     );
 
 
-    /*
-      10. SPA fallback
-    */
+    /* =====================================================
+       15. SPA FALLBACK
+    ===================================================== */
 
     app.get("/{*splat}", (req, res) => {
 
@@ -2588,18 +2894,21 @@ async function init() {
     });
 
 
-    /*
-      11. Start server
-    */
+    /* =====================================================
+       16. START SERVER
+    ===================================================== */
 
     app.listen(
       PORT,
       () => {
+
         console.log(
           `TaskMint running on port ${PORT}`
         );
+
       }
     );
+
 
   } catch (e) {
 
@@ -2614,7 +2923,9 @@ async function init() {
     }
 
     process.exit(1);
+
   }
+
 }
 
 
