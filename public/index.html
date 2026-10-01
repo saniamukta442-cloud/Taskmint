@@ -2,1985 +2,2011 @@
 <html lang="en">
 
 <head>
+
+  <!-- Monetag -->
   <script
-  src="//libtl.com/sdk.js"
-  data-zone="11762706"
-  data-sdk="show_11762706"
-  async>
-</script>
-
-<script
-  src="https://ad.gigapub.tech/script?id=8285">
-</script>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>TaskMint — Earn Rewards</title>
-
-<style>
-
-:root{
-  --bg:#070b14;
-  --panel:#0e1727;
-  --text:#f5f7fb;
-  --muted:#93a0b5;
-  --cyan:#35d6ff;
-  --purple:#9b7cff;
-  --green:#55e39a;
-  --yellow:#ffd166;
-  --red:#ff6b7a;
-  --line:#ffffff12;
-}
-
-*{
-  box-sizing:border-box;
-}
-
-body{
-  margin:0;
-  background:
-    radial-gradient(circle at 20% 0,#172744 0,#070b14 42%);
-  color:var(--text);
-  font-family:
-    system-ui,
-    -apple-system,
-    Segoe UI,
-    Roboto,
-    sans-serif;
-}
-
-button,
-input,
-select{
-  font:inherit;
-}
-
-.wrap{
-  max-width:1100px;
-  margin:auto;
-  padding:0 18px;
-}
-
-header{
-  position:sticky;
-  top:0;
-  z-index:20;
-  background:#070b14dd;
-  backdrop-filter:blur(15px);
-  border-bottom:1px solid var(--line);
-}
-
-nav{
-  height:68px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-}
-
-.brand{
-  font-size:21px;
-  font-weight:900;
-  display:flex;
-  align-items:center;
-  gap:9px;
-}
-
-.logo{
-  width:38px;
-  height:38px;
-  border-radius:12px;
-  display:grid;
-  place-items:center;
-  background:
-    linear-gradient(
-      135deg,
-      var(--cyan),
-      var(--purple)
-    );
-  color:#06101a;
-}
-
-.links{
-  display:flex;
-  gap:25px;
-  color:var(--muted);
-  font-size:14px;
-}
-
-.links a{
-  color:inherit;
-  text-decoration:none;
-}
-
-.actions{
-  display:flex;
-  gap:8px;
-}
-
-.btn{
-  border:0;
-  border-radius:12px;
-  padding:11px 16px;
-  font-weight:800;
-  cursor:pointer;
-}
-
-.btn:disabled{
-  opacity:.55;
-  cursor:not-allowed;
-}
-
-.primary{
-  background:
-    linear-gradient(
-      135deg,
-      var(--cyan),
-      #718cff
-    );
-  color:#06101a;
-}
-
-.ghost{
-  background:transparent;
-  border:1px solid var(--line);
-  color:#fff;
-}
-
-.hero{
-  padding:70px 0 35px;
-  display:grid;
-  grid-template-columns:1.15fr .85fr;
-  gap:45px;
-  align-items:center;
-}
-
-.eyebrow{
-  color:#8ee9ff;
-  background:#35d6ff12;
-  border:1px solid #35d6ff35;
-  border-radius:99px;
-  padding:7px 11px;
-  font-size:12px;
-  font-weight:800;
-}
-
-.hero h1{
-  font-size:clamp(43px,6vw,70px);
-  line-height:1.02;
-  letter-spacing:-2px;
-  margin:18px 0;
-}
-
-.hero h1 span{
-  background:
-    linear-gradient(
-      90deg,
-      var(--cyan),
-      #b08cff
-    );
-  -webkit-background-clip:text;
-  color:transparent;
-}
-
-.hero p{
-  color:var(--muted);
-  font-size:17px;
-  line-height:1.7;
-}
-
-.heroBtns{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-top:24px;
-}
-
-.balanceCard,
-.card,
-.stat,
-.step,
-.ref,
-.dashCard{
-  background:
-    linear-gradient(
-      145deg,
-      #0f192a,
-      #0a101b
-    );
-  border:1px solid var(--line);
-  border-radius:21px;
-}
-
-.balanceCard{
-  padding:25px;
-  box-shadow:0 20px 60px #0004;
-}
-
-.muted{
-  color:var(--muted);
-  font-size:13px;
-}
-
-.balance{
-  font-size:40px;
-  font-weight:900;
-  margin:7px 0 17px;
-}
-
-.bar{
-  height:8px;
-  background:#182337;
-  border-radius:99px;
-  overflow:hidden;
-  margin:9px 0;
-}
-
-.bar i{
-  display:block;
-  width:0%;
-  height:100%;
-  background:
-    linear-gradient(
-      90deg,
-      var(--cyan),
-      var(--purple)
-    );
-  transition:.4s;
-}
-
-.stats{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-  margin:18px auto 65px;
-}
-
-.stat{
-  padding:20px;
-}
-
-.stat b{
-  display:block;
-  font-size:24px;
-  margin-top:6px;
-}
-
-.section{
-  padding-bottom:70px;
-}
-
-.section h2{
-  font-size:28px;
-  margin:0 0 5px;
-}
-
-.intro{
-  color:var(--muted);
-  margin:0 0 20px;
-}
-
-.cards,
-.steps{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:15px;
-}
-
-.card,
-.step{
-  padding:21px;
-}
-
-.icon{
-  width:45px;
-  height:45px;
-  border-radius:13px;
-  display:grid;
-  place-items:center;
-  background:#35d6ff12;
-  font-size:21px;
-}
-
-.card h3,
-.step h3{
-  margin:14px 0 7px;
-}
-
-.card p,
-.step p{
-  color:var(--muted);
-  line-height:1.55;
-  font-size:14px;
-}
-
-.earn{
-  color:var(--green);
-  font-weight:800;
-  font-size:14px;
-}
-
-.num{
-  color:var(--cyan);
-  font-size:12px;
-  font-weight:900;
-}
-
-.ref{
-  padding:28px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
-}
-
-.ref p{
-  color:var(--muted);
-  line-height:1.6;
-}
-
-.refbox{
-  display:flex;
-  background:#080e18;
-  border:1px solid var(--line);
-  border-radius:13px;
-  padding:7px;
-}
-
-.refbox input{
-  flex:1;
-  min-width:0;
-  background:transparent;
-  border:0;
-  outline:0;
-  color:var(--muted);
-  padding:8px;
-}
-
-.footer{
-  border-top:1px solid var(--line);
-  padding:28px 18px;
-  color:var(--muted);
-  font-size:13px;
-}
-
-.dash{
-  display:none;
-  padding-bottom:80px;
-}
-
-.dashGrid{
-  display:grid;
-  grid-template-columns:1.1fr .9fr;
-  gap:15px;
-}
-
-.dashCard{
-  padding:22px;
-}
-
-.dashTop{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-}
-
-.pill{
-  padding:7px 10px;
-  border-radius:99px;
-  background:#55e39a12;
-  color:var(--green);
-  font-size:12px;
-  font-weight:800;
-}
-
-.activity{
-  display:grid;
-  gap:9px;
-}
-
-.activity div{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  border-bottom:1px solid var(--line);
-  padding:10px 0;
-}
-
-.positive{
-  color:var(--green);
-}
-
-.negative{
-  color:var(--red);
-}
-
-.bonusCard{
-  position:relative;
-  overflow:hidden;
-}
-
-.bonusCard:before{
-  content:"";
-  position:absolute;
-  width:150px;
-  height:150px;
-  right:-70px;
-  top:-70px;
-  border-radius:50%;
-  background:#ffd16615;
-}
-
-.bonusAmount{
-  font-size:38px;
-  font-weight:900;
-  color:var(--yellow);
-  margin:10px 0;
-}
-
-.rewardBox{
-  background:#080e18;
-  border:1px solid var(--line);
-  border-radius:15px;
-  padding:15px;
-  margin:14px 0;
-}
-
-.rewardRow{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:9px 0;
-  border-bottom:1px solid var(--line);
-}
-
-.rewardRow:last-child{
-  border-bottom:0;
-}
-
-.notice{
-  font-size:13px;
-  color:var(--muted);
-  min-height:20px;
-  line-height:1.5;
-}
-
-.success{
-  color:var(--green);
-}
-
-.error{
-  color:var(--red);
-}
-
-.modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  z-index:50;
-  background:#0009;
-  align-items:center;
-  justify-content:center;
-  padding:18px;
-}
-
-.modalBox{
-  width:min(430px,100%);
-  background:#0d1625;
-  border:1px solid var(--line);
-  border-radius:22px;
-  padding:23px;
-}
-
-.modalBox h2{
-  margin-top:0;
-}
-
-.input{
-  width:100%;
-  padding:13px;
-  border:1px solid var(--line);
-  border-radius:12px;
-  background:#080e18;
-  color:#fff;
-  outline:0;
-  margin:7px 0;
-}
-
-.close{
-  float:right;
-  background:none;
-  border:0;
-  color:#aaa;
-  font-size:25px;
-}
-
-.adInfo{
-  border:1px solid #35d6ff25;
-  background:#35d6ff08;
-  padding:14px;
-  border-radius:14px;
-  margin-top:15px;
-}
-
-.adReward{
-  color:var(--green);
-  font-size:22px;
-  font-weight:900;
-}
-
-  /* =========================
-   WATCH VIDEO BUTTONS
-   ========================= */
-
-.adButton{
-  flex:1;
-  border:0;
-  border-radius:18px;
-  padding:16px 12px;
-  min-height:90px;
-
-  background:linear-gradient(
-    135deg,
-    #22d3ee,
-    #6366f1
-  );
-
-  color:#06111f;
-  font-size:20px;
-  font-weight:800;
-
-  cursor:pointer;
-
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:4px;
-
-  box-shadow:
-    0 8px 25px rgba(34,211,238,.18);
-
-  transition:
-    transform .15s ease,
-    box-shadow .15s ease;
-}
-
-.adButton span{
-  font-size:18px;
-  font-weight:800;
-}
-
-.adButton:hover{
-  transform:translateY(-2px);
-  box-shadow:
-    0 12px 30px rgba(99,102,241,.28);
-}
-
-.adButton:active{
-  transform:scale(.97);
-}
-
-.adButton:disabled{
-  opacity:.55;
-  cursor:not-allowed;
-  transform:none;
-}
-
-@media(max-width:600px){
-
-  .adButton{
-    min-height:86px;
-    font-size:18px;
-  }
-
-  .adButton span{
-    font-size:17px;
-  }
-}
-
-@media(max-width:760px){
-
-  .links{
-    display:none;
-  }
-
-  .hero{
-    grid-template-columns:1fr;
-    padding-top:45px;
-  }
-
-  .cards,
-  .steps,
-  .ref,
-  .dashGrid{
-    grid-template-columns:1fr;
-  }
-
-  .stats{
-    grid-template-columns:1fr 1fr;
-  }
-
-  .stats .stat:last-child{
-    grid-column:span 2;
-  }
-
-  .hero h1{
-    letter-spacing:-1px;
-  }
-
-  .actions .ghost{
-    display:none;
-  }
-}
-
-/* =========================
-   TASKS
-========================= */
-
-.taskPanel{
-  margin-top:22px;
-}
-
-.sectionHead{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:16px;
-  margin-bottom:18px;
-}
-
-.sectionHead h2{
-  margin:5px 0 5px;
-  font-size:24px;
-}
-
-.sectionHead p{
-  margin:0;
-  color:var(--muted);
-  font-size:14px;
-}
-
-.tasksList{
-  display:grid;
-  grid-template-columns:
-    repeat(auto-fit,minmax(250px,1fr));
-  gap:14px;
-}
-
-.taskCard{
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255,255,255,.05),
-      rgba(255,255,255,.02)
-    );
-
-  border:1px solid var(--line);
-
-  border-radius:18px;
-
-  padding:18px;
-
-  transition:
-    transform .18s ease,
-    border-color .18s ease;
-}
-
-.taskCard:hover{
-  transform:translateY(-2px);
-  border-color:rgba(53,214,255,.35);
-}
-
-.taskTop{
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:12px;
-}
-
-.taskIcon{
-  width:48px;
-  height:48px;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  border-radius:14px;
-
-  background:
-    rgba(53,214,255,.10);
-
-  font-size:25px;
-}
-
-.taskReward{
-  color:var(--green);
-  font-weight:800;
-  font-size:17px;
-}
-
-.taskTitle{
-  margin:14px 0 7px;
-
-  font-size:17px;
-  font-weight:750;
-}
-
-.taskDescription{
-  color:var(--muted);
-
-  font-size:13px;
-  line-height:1.55;
-
-  min-height:42px;
-
-  margin-bottom:15px;
-}
-
-.taskMeta{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-
-  gap:10px;
-
-  margin-top:10px;
-}
-
-.taskType{
-  font-size:12px;
-  color:var(--muted);
-
-  padding:6px 9px;
-
-  border-radius:999px;
-
-  background:rgba(255,255,255,.05);
-}
-
-.taskStartBtn{
-  border:0;
-
-  border-radius:10px;
-
-  padding:10px 15px;
-
-  font-weight:750;
-
-  color:#071019;
-
-  background:var(--cyan);
-
-  cursor:pointer;
-}
-
-.taskStartBtn:hover{
-  filter:brightness(1.08);
-}
-
-.taskStartBtn:disabled{
-  opacity:.55;
-  cursor:not-allowed;
-}
-
-.taskPending{
-  color:var(--yellow);
-  font-size:13px;
-  font-weight:700;
-}
-
-.taskCompleted{
-  color:var(--green);
-  font-size:13px;
-  font-weight:700;
-}
-
-.taskEmpty{
-  text-align:center;
-
-  padding:30px 15px;
-
-  color:var(--muted);
-}
-
-@media(max-width:600px){
-
-  .sectionHead{
-    align-items:flex-start;
-  }
-
-  .tasksList{
-    grid-template-columns:1fr;
-  }
-
-  .taskCard{
-    padding:15px;
-  }
-}
-  
-</style>
+    src="//libtl.com/sdk.js"
+    data-zone="11762706"
+    data-sdk="show_11762706"
+    async>
+  </script>
+
+  <!-- GigaPub -->
+  <script
+    src="https://ad.gigapub.tech/script?id=8285">
+  </script>
+
+  <meta charset="utf-8">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1">
+
+  <title>TaskMint — Earn Rewards</title>
+
+  <style>
+
+    :root{
+      --bg:#070b14;
+      --panel:#0e1727;
+      --text:#f5f7fb;
+      --muted:#93a0b5;
+      --cyan:#35d6ff;
+      --purple:#9b7cff;
+      --green:#55e39a;
+      --yellow:#ffd166;
+      --red:#ff6b7a;
+      --line:#ffffff12;
+    }
+
+    *{
+      box-sizing:border-box;
+    }
+
+    html{
+      scroll-behavior:smooth;
+    }
+
+    body{
+      margin:0;
+      background:
+        radial-gradient(
+          circle at 20% 0,
+          #172744 0,
+          #070b14 42%
+        );
+      color:var(--text);
+      font-family:
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        sans-serif;
+    }
+
+    button,
+    input,
+    select{
+      font:inherit;
+    }
+
+    button{
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:auto;
+      padding:0 18px;
+    }
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:20;
+      background:#070b14dd;
+      backdrop-filter:blur(15px);
+      border-bottom:1px solid var(--line);
+    }
+
+    nav{
+      height:68px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .brand{
+      font-size:21px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      gap:9px;
+    }
+
+    .logo{
+      width:38px;
+      height:38px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--cyan),
+          var(--purple)
+        );
+
+      color:#06101a;
+      font-weight:900;
+    }
+
+    .links{
+      display:flex;
+      gap:25px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .links a{
+      color:inherit;
+      text-decoration:none;
+    }
+
+    .links a:hover{
+      color:#fff;
+    }
+
+    .actions{
+      display:flex;
+      gap:8px;
+    }
+
+    .btn{
+      border:0;
+      border-radius:12px;
+      padding:11px 16px;
+      font-weight:800;
+      cursor:pointer;
+    }
+
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .primary{
+      background:
+        linear-gradient(
+          135deg,
+          var(--cyan),
+          #718cff
+        );
+
+      color:#06101a;
+    }
+
+    .ghost{
+      background:transparent;
+      border:1px solid var(--line);
+      color:#fff;
+    }
+
+    .ghost:hover{
+      background:#ffffff08;
+    }
+
+    /* =========================
+       HERO
+    ========================= */
+
+    .hero{
+      padding:70px 0 35px;
+      display:grid;
+      grid-template-columns:1.15fr .85fr;
+      gap:45px;
+      align-items:center;
+    }
+
+    .eyebrow{
+      display:inline-block;
+      color:#8ee9ff;
+      background:#35d6ff12;
+      border:1px solid #35d6ff35;
+      border-radius:99px;
+      padding:7px 11px;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .hero h1{
+      font-size:clamp(43px,6vw,70px);
+      line-height:1.02;
+      letter-spacing:-2px;
+      margin:18px 0;
+    }
+
+    .hero h1 span{
+      background:
+        linear-gradient(
+          90deg,
+          var(--cyan),
+          #b08cff
+        );
+
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+
+    .hero p{
+      color:var(--muted);
+      font-size:17px;
+      line-height:1.7;
+    }
+
+    .heroBtns{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:24px;
+    }
+
+    /* =========================
+       CARDS
+    ========================= */
+
+    .balanceCard,
+    .card,
+    .stat,
+    .step,
+    .ref,
+    .dashCard,
+    .statCard{
+      background:
+        linear-gradient(
+          145deg,
+          #0f192a,
+          #0a101b
+        );
+
+      border:1px solid var(--line);
+      border-radius:21px;
+    }
+
+    .balanceCard{
+      padding:25px;
+      box-shadow:0 20px 60px #0004;
+    }
+
+    .muted{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .balance{
+      font-size:40px;
+      font-weight:900;
+      margin:7px 0 17px;
+    }
+
+    .bar{
+      height:8px;
+      background:#182337;
+      border-radius:99px;
+      overflow:hidden;
+      margin:9px 0;
+    }
+
+    .bar i{
+      display:block;
+      width:0%;
+      height:100%;
+
+      background:
+        linear-gradient(
+          90deg,
+          var(--cyan),
+          var(--purple)
+        );
+
+      transition:.4s;
+    }
+
+    /* =========================
+       STATS
+    ========================= */
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin:18px auto 65px;
+    }
+
+    .stat{
+      padding:20px;
+    }
+
+    .stat b{
+      display:block;
+      font-size:24px;
+      margin-top:6px;
+    }
+
+    /* =========================
+       LANDING SECTIONS
+    ========================= */
+
+    .section{
+      padding-bottom:70px;
+    }
+
+    .section h2{
+      font-size:28px;
+      margin:0 0 5px;
+    }
+
+    .intro{
+      color:var(--muted);
+      margin:0 0 20px;
+    }
+
+    .cards,
+    .steps{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:15px;
+    }
+
+    .card,
+    .step{
+      padding:21px;
+    }
+
+    .icon{
+      width:45px;
+      height:45px;
+      border-radius:13px;
+      display:grid;
+      place-items:center;
+      background:#35d6ff12;
+      font-size:21px;
+    }
+
+    .card h3,
+    .step h3{
+      margin:14px 0 7px;
+    }
+
+    .card p,
+    .step p{
+      color:var(--muted);
+      line-height:1.55;
+      font-size:14px;
+    }
+
+    .earn{
+      color:var(--green);
+      font-weight:800;
+      font-size:14px;
+    }
+
+    .num{
+      color:var(--cyan);
+      font-size:12px;
+      font-weight:900;
+    }
+
+    /* =========================
+       REFERRAL LANDING
+    ========================= */
+
+    .ref{
+      padding:28px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+    }
+
+    .ref p{
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .refbox{
+      display:flex;
+      background:#080e18;
+      border:1px solid var(--line);
+      border-radius:13px;
+      padding:7px;
+    }
+
+    .refbox input{
+      flex:1;
+      min-width:0;
+      background:transparent;
+      border:0;
+      outline:0;
+      color:var(--muted);
+      padding:8px;
+    }
+
+    /* =========================
+       FOOTER
+    ========================= */
+
+    .footer{
+      border-top:1px solid var(--line);
+      padding:28px 18px;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* =========================
+       DASHBOARD
+    ========================= */
+
+    .dash{
+      display:none;
+      padding-top:35px;
+      padding-bottom:80px;
+    }
+
+    .dashTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:18px;
+    }
+
+    .dashGrid{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:15px;
+    }
+
+    .statCard{
+      padding:20px;
+    }
+
+    .statLabel{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:7px;
+    }
+
+    .statValue{
+      font-size:28px;
+      font-weight:900;
+      margin-bottom:10px;
+    }
+
+    .statValue.small{
+      font-size:20px;
+      word-break:break-word;
+    }
+
+    .smallBtn{
+      border:1px solid var(--line);
+      background:#ffffff08;
+      color:#fff;
+      border-radius:10px;
+      padding:8px 12px;
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    .smallBtn:hover{
+      background:#ffffff12;
+    }
+
+    .dashCard{
+      padding:22px;
+    }
+
+    .dashCard h2{
+      margin-top:0;
+    }
+
+    .pill{
+      padding:7px 10px;
+      border-radius:99px;
+      background:#55e39a12;
+      color:var(--green);
+      font-size:12px;
+      font-weight:800;
+    }
+
+    /* =========================
+       REFERRAL DASHBOARD
+    ========================= */
+
+    .refDash{
+      margin-top:15px;
+    }
+
+    .refDashBox{
+      display:flex;
+      gap:8px;
+      margin-top:12px;
+    }
+
+    .refDashBox input{
+      flex:1;
+      min-width:0;
+      background:#080e18;
+      border:1px solid var(--line);
+      border-radius:11px;
+      color:#fff;
+      padding:11px;
+      outline:none;
+    }
+
+    /* =========================
+       TASKS
+    ========================= */
+
+    .taskPanel{
+      margin-top:22px;
+    }
+
+    .sectionHead{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      margin-bottom:18px;
+    }
+
+    .sectionHead h2{
+      margin:5px 0 5px;
+      font-size:24px;
+    }
+
+    .sectionHead p{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .tasksList{
+      display:grid;
+      grid-template-columns:
+        repeat(auto-fit,minmax(250px,1fr));
+      gap:14px;
+    }
+
+    .taskCard{
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,.05),
+          rgba(255,255,255,.02)
+        );
+
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+
+      transition:
+        transform .18s ease,
+        border-color .18s ease;
+    }
+
+    .taskCard:hover{
+      transform:translateY(-2px);
+      border-color:rgba(53,214,255,.35);
+    }
+
+    .taskTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+    }
+
+    .taskIcon{
+      width:48px;
+      height:48px;
+
+      display:flex;
+      align-items:center;
+      justify-content:center;
+
+      border-radius:14px;
+      background:rgba(53,214,255,.10);
+
+      font-size:25px;
+    }
+
+    .taskReward{
+      color:var(--green);
+      font-weight:800;
+      font-size:17px;
+    }
+
+    .taskTitle{
+      margin:14px 0 7px;
+      font-size:17px;
+      font-weight:750;
+    }
+
+    .taskDescription{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.55;
+      min-height:42px;
+      margin-bottom:15px;
+    }
+
+    .taskMeta{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .taskType{
+      font-size:12px;
+      color:var(--muted);
+      padding:6px 9px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+    }
+
+    .taskStartBtn{
+      border:0;
+      border-radius:10px;
+      padding:10px 15px;
+      font-weight:750;
+      color:#071019;
+      background:var(--cyan);
+      cursor:pointer;
+    }
+
+    .taskStartBtn:hover{
+      filter:brightness(1.08);
+    }
+
+    .taskStartBtn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+
+    .taskPending{
+      color:var(--yellow);
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .taskCompleted{
+      color:var(--green);
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .taskRejected{
+      color:var(--red);
+      font-size:13px;
+      font-weight:700;
+    }
+
+    .taskEmpty{
+      text-align:center;
+      padding:30px 15px;
+      color:var(--muted);
+    }
+
+    /* =========================
+       WATCH ADS
+    ========================= */
+
+    .adInfo{
+      border:1px solid #35d6ff25;
+      background:#35d6ff08;
+      padding:14px;
+      border-radius:14px;
+      margin-top:15px;
+    }
+
+    .adReward{
+      color:var(--green);
+      font-size:22px;
+      font-weight:900;
+    }
+
+    .adButton{
+      flex:1;
+      border:0;
+      border-radius:18px;
+      padding:16px 12px;
+      min-height:90px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #22d3ee,
+          #6366f1
+        );
+
+      color:#06111f;
+      font-size:18px;
+      font-weight:800;
+
+      cursor:pointer;
+
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+
+      box-shadow:
+        0 8px 25px rgba(34,211,238,.18);
+
+      transition:
+        transform .15s ease,
+        box-shadow .15s ease;
+    }
+
+    .adButton span{
+      font-size:16px;
+      font-weight:800;
+    }
+
+    .adButton:hover{
+      transform:translateY(-2px);
+    }
+
+    .adButton:active{
+      transform:scale(.97);
+    }
+
+    .adButton:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    /* =========================
+       DAILY BONUS
+    ========================= */
+
+    .bonusCard{
+      position:relative;
+      overflow:hidden;
+    }
+
+    .bonusCard:before{
+      content:"";
+      position:absolute;
+      width:150px;
+      height:150px;
+      right:-70px;
+      top:-70px;
+      border-radius:50%;
+      background:#ffd16615;
+    }
+
+    .bonusAmount{
+      font-size:38px;
+      font-weight:900;
+      color:var(--yellow);
+      margin:10px 0;
+    }
+
+    /* =========================
+       REWARD BOX
+    ========================= */
+
+    .rewardBox{
+      background:#080e18;
+      border:1px solid var(--line);
+      border-radius:15px;
+      padding:15px;
+      margin:14px 0;
+    }
+
+    .rewardRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:9px 0;
+      border-bottom:1px solid var(--line);
+    }
+
+    .rewardRow:last-child{
+      border-bottom:0;
+    }
+
+    /* =========================
+       ACTIVITY
+    ========================= */
+
+    .activity{
+      display:grid;
+      gap:9px;
+    }
+
+    .activity div{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid var(--line);
+      padding:10px 0;
+    }
+
+    .positive{
+      color:var(--green);
+    }
+
+    .negative{
+      color:var(--red);
+    }
+
+    /* =========================
+       NOTICE
+    ========================= */
+
+    .notice{
+      font-size:13px;
+      color:var(--muted);
+      min-height:20px;
+      line-height:1.5;
+    }
+
+    .success{
+      color:var(--green);
+    }
+
+    .error{
+      color:var(--red);
+    }
+
+    /* =========================
+       MODALS
+    ========================= */
+
+    .modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      z-index:50;
+      background:#0009;
+
+      align-items:center;
+      justify-content:center;
+
+      padding:18px;
+    }
+
+    .modalBox{
+      width:min(430px,100%);
+      max-height:90vh;
+      overflow:auto;
+
+      background:#0d1625;
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:23px;
+    }
+
+    .modalBox h2{
+      margin-top:0;
+    }
+
+    .input{
+      width:100%;
+      padding:13px;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#080e18;
+      color:#fff;
+      outline:0;
+      margin:7px 0;
+    }
+
+    .input:focus{
+      border-color:#35d6ff55;
+    }
+
+    .close{
+      float:right;
+      background:none;
+      border:0;
+      color:#aaa;
+      font-size:25px;
+      cursor:pointer;
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
+    @media(max-width:760px){
+
+      .links{
+        display:none;
+      }
+
+      .hero{
+        grid-template-columns:1fr;
+        padding-top:45px;
+      }
+
+      .cards,
+      .steps,
+      .ref,
+      .dashGrid{
+        grid-template-columns:1fr;
+      }
+
+      .stats{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .stats .stat:last-child{
+        grid-column:span 2;
+      }
+
+      .hero h1{
+        letter-spacing:-1px;
+      }
+
+      .actions .ghost{
+        display:none;
+      }
+
+      .refDashBox{
+        flex-direction:column;
+      }
+    }
+
+    @media(max-width:600px){
+
+      .wrap{
+        padding:0 14px;
+      }
+
+      .hero{
+        padding-top:35px;
+      }
+
+      .hero h1{
+        font-size:43px;
+      }
+
+      .stats{
+        grid-template-columns:1fr;
+      }
+
+      .stats .stat:last-child{
+        grid-column:auto;
+      }
+
+      .sectionHead{
+        align-items:flex-start;
+      }
+
+      .tasksList{
+        grid-template-columns:1fr;
+      }
+
+      .taskCard{
+        padding:15px;
+      }
+
+      .adButton{
+        min-height:86px;
+        font-size:16px;
+      }
+
+      .adButton span{
+        font-size:15px;
+      }
+
+      .adButtons{
+        grid-template-columns:1fr !important;
+      }
+    }
+
+  </style>
+
 </head>
 
 <body>
 
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
 <header>
 
-<nav class="wrap">
+  <nav class="wrap">
 
-<div class="brand">
-  <div class="logo">$</div>
-  TaskMint
-</div>
+    <div class="brand">
 
-<div class="links">
-  <a href="#tasks">Tasks</a>
-  <a href="#how">How it works</a>
-  <a href="#referral">Referral</a>
-</div>
+      <div class="logo">
+        $
+      </div>
 
-<div class="actions">
-  <button
-    class="btn ghost"
-    onclick="openAuth('login')">
-    Log in
-  </button>
+      TaskMint
 
-  <button
-    class="btn primary"
-    onclick="openAuth('register')">
-    Get started
-  </button>
-</div>
+    </div>
 
-</nav>
+    <div class="links">
+
+      <a href="#tasks">
+        Tasks
+      </a>
+
+      <a href="#how">
+        How it works
+      </a>
+
+      <a href="#referral">
+        Referral
+      </a>
+
+    </div>
+
+    <div class="actions">
+
+      <button
+        class="btn ghost"
+        onclick="openAuth('login')">
+        Log in
+      </button>
+
+      <button
+        class="btn primary"
+        onclick="openAuth('register')">
+        Get started
+      </button>
+
+    </div>
+
+  </nav>
 
 </header>
 
-<!-- ================= LANDING ================= -->
+
+<!-- =====================================================
+     LANDING PAGE
+===================================================== -->
 
 <main id="landing">
 
-<section class="wrap hero">
+  <!-- HERO -->
 
-<div>
+  <section class="wrap hero">
 
-<span class="eyebrow">
-✦ EARN REAL REWARDS
-</span>
-
-<h1>
-Turn simple tasks into
-<span>rewards.</span>
-</h1>
-
-<p>
-Complete eligible activities, collect verified rewards,
-build your dollar balance and request withdrawals.
-</p>
-
-<div class="heroBtns">
-
-<button
-  class="btn primary"
-  onclick="openAuth('register')">
-  Start earning →
-</button>
-
-<button
-  class="btn ghost"
-  onclick="document.querySelector('#how').scrollIntoView()">
-  How it works
-</button>
-
-</div>
-
-</div>
-
-<div class="balanceCard">
-
-<div class="muted">
-Available balance
-</div>
-
-<div class="balance">
-$0.00
-</div>
-
-<div class="muted">
-Today's progress
-</div>
-
-<div class="bar">
-<i style="width:0%"></i>
-</div>
-
-<div style="display:flex;justify-content:space-between">
-
-<span class="muted">
-0 / 5 tasks
-</span>
-
-<span class="muted">
-$0.00 earned
-</span>
-
-</div>
-
-<hr style="
-border:0;
-border-top:1px solid var(--line);
-margin:20px 0;
-">
-
-<div style="
-display:flex;
-justify-content:space-between;
-">
-
-<span class="muted">
-Account status
-</span>
-
-<b style="
-color:var(--green);
-font-size:13px;
-">
-Ready
-</b>
-
-</div>
-
-</div>
-
-</section>
-
-<section class="wrap stats">
-
-<div class="stat">
-<span class="muted">
-Ad reward
-</span>
-<b>
-$0.50
-</b>
-</div>
-
-<div class="stat">
-<span class="muted">
-Daily bonus
-</span>
-<b>
-$1.00
-</b>
-</div>
-
-<div class="stat">
-<span class="muted">
-Referral reward
-</span>
-<b>
-$5.00
-</b>
-</div>
-
-</section>
-
-<section
-  class="wrap section"
-  id="tasks">
-
-<h2>
-Ways to earn
-</h2>
-
-<p class="intro">
-Choose an available activity and follow its instructions.
-</p>
-
-<div class="cards">
-
-<article class="card">
-
-<div class="icon">
-🎬
-</div>
-
-<section class="panel taskPanel" id="tasksSection">
-
-  <div class="sectionHead">
     <div>
-      <div class="eyebrow">✦ EARN MORE</div>
-      <h2>Available Tasks</h2>
-      <p>Complete eligible activities and earn rewards.</p>
+
+      <span class="eyebrow">
+        ✦ EARN REAL REWARDS
+      </span>
+
+      <h1>
+        Turn simple tasks into
+        <span>rewards.</span>
+      </h1>
+
+      <p>
+        Complete eligible activities, collect verified
+        rewards, build your dollar balance and request
+        withdrawals.
+      </p>
+
+      <div class="heroBtns">
+
+        <button
+          class="btn primary"
+          onclick="openAuth('register')">
+          Start earning →
+        </button>
+
+        <button
+          class="btn ghost"
+          onclick="document.querySelector('#how').scrollIntoView()">
+          How it works
+        </button>
+
+      </div>
+
     </div>
 
-    <button
-      class="smallBtn"
-      onclick="loadTasks()">
-      Refresh
-    </button>
-  </div>
 
-  <div id="tasksLoading" class="taskEmpty">
-    Loading tasks...
-  </div>
+    <div class="balanceCard">
 
-  <div
-    id="tasksList"
-    class="tasksList">
-  </div>
+      <div class="muted">
+        Available balance
+      </div>
 
-</section>
-  
-<h3>
-Watch & Earn
-</h3>
+      <div class="balance">
+        $0.00
+      </div>
 
-<p>
-Watch an eligible verified advertisement and receive
-the configured reward after successful verification.
-</p>
+      <div class="muted">
+        Today's progress
+      </div>
 
-<div class="earn">
-+$0.50 / verified ad
-</div>
+      <div class="bar">
+        <i style="width:0%"></i>
+      </div>
 
-</article>
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+        ">
 
-<article class="card">
+        <span class="muted">
+          0 / 5 tasks
+        </span>
 
-<div class="icon">
-🎁
-</div>
+        <span class="muted">
+          $0.00 earned
+        </span>
 
-<h3>
-Daily Bonus
-</h3>
+      </div>
 
-<p>
-Return every day and claim your daily bonus once per day.
-</p>
+      <hr
+        style="
+          border:0;
+          border-top:1px solid var(--line);
+          margin:20px 0;
+        ">
 
-<div class="earn">
-+$1.00 / day
-</div>
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+        ">
 
-</article>
+        <span class="muted">
+          Account status
+        </span>
 
-<article class="card">
+        <b
+          style="
+            color:var(--green);
+            font-size:13px;
+          ">
+          Ready
+        </b>
 
-<div class="icon">
-👥
-</div>
+      </div>
 
-<h3>
-Referral
-</h3>
+    </div>
 
-<p>
-Invite a new user using your referral code and receive
-a referral reward when the registration is completed.
-</p>
+  </section>
 
-<div class="earn">
-+$5.00 / referral
-</div>
 
-</article>
+  <!-- STATS -->
 
-</div>
+  <section class="wrap stats">
 
-</section>
+    <div class="stat">
 
-<section
-  class="wrap section"
-  id="how">
+      <span class="muted">
+        Ad reward
+      </span>
 
-<h2>
-How it works
-</h2>
+      <b>
+        $0.50
+      </b>
 
-<p class="intro">
-Three simple steps.
-</p>
+    </div>
 
-<div class="steps">
+    <div class="stat">
 
-<div class="step">
+      <span class="muted">
+        Daily bonus
+      </span>
 
-<div class="num">
-01 — CREATE ACCOUNT
-</div>
+      <b>
+        $1.00
+      </b>
 
-<h3>
-Sign up
-</h3>
+    </div>
 
-<p>
-Create your account and complete basic profile information.
-</p>
+    <div class="stat">
 
-</div>
+      <span class="muted">
+        Referral reward
+      </span>
 
-<div class="step">
+      <b>
+        $5.00
+      </b>
 
-<div class="num">
-02 — EARN
-</div>
+    </div>
 
-<h3>
-Complete activities
-</h3>
+  </section>
 
-<p>
-Watch verified ads, claim the daily bonus and invite referrals.
-</p>
 
-</div>
+  <!-- WAYS TO EARN -->
 
-<div class="step">
+  <section
+    class="wrap section"
+    id="tasks">
 
-<div class="num">
-03 — WITHDRAW
-</div>
+    <h2>
+      Ways to earn
+    </h2>
 
-<h3>
-Request a reward
-</h3>
+    <p class="intro">
+      Choose an available activity and follow its
+      instructions.
+    </p>
 
-<p>
-Once your balance reaches $50, you can submit a withdrawal request.
-</p>
+    <div class="cards">
 
-</div>
+      <article class="card">
 
-</div>
+        <div class="icon">
+          🎬
+        </div>
 
-</section>
+        <h3>
+          Watch & Earn
+        </h3>
 
-<section
-  class="wrap section"
-  id="referral">
+        <p>
+          Watch an eligible verified advertisement and
+          receive the configured reward after successful
+          verification.
+        </p>
 
-<div class="ref">
+        <div class="earn">
+          +$0.50 / verified ad
+        </div>
 
-<div>
+      </article>
 
-<h2>
-Invite friends. Earn $5.
-</h2>
 
-<p>
-Share your referral code with friends.
-A successful referred registration can earn you $5.
-</p>
+      <article class="card">
 
-</div>
+        <div class="icon">
+          🎁
+        </div>
 
-<div class="refbox">
+        <h3>
+          Daily Bonus
+        </h3>
 
-<input
-  value="Sign in to get your referral code"
-  readonly>
+        <p>
+          Return every day and claim your daily bonus
+          once per day.
+        </p>
 
-<button
-  class="btn primary"
-  onclick="openAuth('login')">
-  Login
-</button>
+        <div class="earn">
+          +$1.00 / day
+        </div>
 
-</div>
+      </article>
 
-</div>
 
-</section>
+      <article class="card">
+
+        <div class="icon">
+          👥
+        </div>
+
+        <h3>
+          Referral
+        </h3>
+
+        <p>
+          Invite a new user using your referral code and
+          receive a referral reward when registration is
+          completed.
+        </p>
+
+        <div class="earn">
+          +$5.00 / referral
+        </div>
+
+      </article>
+
+    </div>
+
+  </section>
+
+
+  <!-- HOW IT WORKS -->
+
+  <section
+    class="wrap section"
+    id="how">
+
+    <h2>
+      How it works
+    </h2>
+
+    <p class="intro">
+      Three simple steps.
+    </p>
+
+    <div class="steps">
+
+      <div class="step">
+
+        <div class="num">
+          01 — CREATE ACCOUNT
+        </div>
+
+        <h3>
+          Sign up
+        </h3>
+
+        <p>
+          Create your account and complete basic profile
+          information.
+        </p>
+
+      </div>
+
+
+      <div class="step">
+
+        <div class="num">
+          02 — EARN
+        </div>
+
+        <h3>
+          Complete activities
+        </h3>
+
+        <p>
+          Complete available tasks, watch verified ads,
+          claim the daily bonus and invite referrals.
+        </p>
+
+      </div>
+
+
+      <div class="step">
+
+        <div class="num">
+          03 — WITHDRAW
+        </div>
+
+        <h3>
+          Request a reward
+        </h3>
+
+        <p>
+          Once your balance reaches $50, you can submit
+          a withdrawal request.
+        </p>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- REFERRAL -->
+
+  <section
+    class="wrap section"
+    id="referral">
+
+    <div class="ref">
+
+      <div>
+
+        <h2>
+          Invite friends. Earn $5.
+        </h2>
+
+        <p>
+          Share your referral code with friends.
+          A successful referred registration can earn
+          you $5.
+        </p>
+
+      </div>
+
+      <div class="refbox">
+
+        <input
+          value="Sign in to get your referral code"
+          readonly>
+
+        <button
+          class="btn primary"
+          onclick="openAuth('login')">
+          Login
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
 
 </main>
 
-<!-- ================= DASHBOARD ================= -->
+
+<!-- =====================================================
+     DASHBOARD
+===================================================== -->
 
 <section
   class="wrap dash"
   id="dashboard">
 
-<div class="dashTop">
 
-<div>
+  <!-- DASH TOP -->
 
-<div class="muted">
-Welcome back
-</div>
+  <div class="dashTop">
 
-<h1
-  id="dashName"
-  style="margin:4px 0 0">
-Member
-</h1>
+    <div>
 
-</div>
+      <div class="muted">
+        Welcome back
+      </div>
 
-<button
-  class="btn ghost"
-  onclick="logout()">
-Log out
-</button>
+      <h1
+        id="dashName"
+        style="margin:4px 0 0">
+        Member
+      </h1>
 
-</div>
+    </div>
 
-<!-- BALANCE -->
-
-<div class="dashGrid">
-
-  <div class="statCard">
-    <div class="statLabel">Available Balance</div>
-    <div class="statValue" id="dashBalance">$0.00</div>
-  </div>
-
-  <div class="statCard">
-    <div class="statLabel">Total Earned</div>
-    <div class="statValue" id="dashTotal">$0.00</div>
-  </div>
-
-  <div class="statCard">
-    <div class="statLabel">Referral Code</div>
-    <div class="statValue small" id="dashReferral">—</div>
-    <button class="smallBtn" onclick="copyReferralCode()">
-      Copy Code
+    <button
+      class="btn ghost"
+      onclick="logout()">
+      Log out
     </button>
+
   </div>
 
-</div>
 
-<!-- EARNING CARDS -->
+  <!-- BALANCE CARDS -->
 
-<div
-  class="dashGrid"
-  style="margin-top:15px">
+  <div class="dashGrid">
 
-<!-- AD -->
+    <div class="statCard">
 
-<div class="dashCard">
+      <div class="statLabel">
+        Available Balance
+      </div>
 
-<h2>
-🎬 Watch & Earn
-</h2>
+      <div
+        class="statValue"
+        id="dashBalance">
+        $0.00
+      </div>
 
-<div class="adInfo">
+    </div>
 
-<div class="muted">
-Today's ads
-</div>
 
-<div
-  id="adCounter"
-  style="
-    font-size:28px;
-    font-weight:900;
-    margin:5px 0;
-  ">
-0 / 30
-</div>
+    <div class="statCard">
 
-<div class="muted">
-Each verified ad:
-<span class="adReward">
-+$0.50
-</span>
-</div>
+      <div class="statLabel">
+        Total Earned
+      </div>
 
-<div
-  style="
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:18px;
-    margin-top:18px;
-  ">
+      <div
+        class="statValue"
+        id="dashTotal">
+        $0.00
+      </div>
 
-<button
-  id="monetagBtn"
-  class="adButton"
-  onclick="watchMonetag()"
->
-  ▶️ Watch Video
-  <span>+$0.50</span>
-</button>
+    </div>
 
-<button
-  id="gigapubBtn"
-  class="adButton"
-  onclick="watchGigaPub()"
->
-  ▶️ Watch Video
-  <span>+$0.50</span>
-</button>
 
-</div>
+    <div class="statCard">
 
-<p
-  id="adNotice"
-  class="notice">
-Choose an ad provider to earn $0.50.
-</p>
+      <div class="statLabel">
+        Referral Code
+      </div>
 
-</div>
+      <div
+        class="statValue small"
+        id="dashReferral">
+        —
+      </div>
 
-<!-- DAILY BONUS -->
+      <button
+        class="smallBtn"
+        onclick="copyReferralCode()">
+        Copy Code
+      </button>
 
-<div
-  class="dashCard bonusCard">
+    </div>
 
-<h2>
-🎁 Daily Bonus
-</h2>
+  </div>
 
-<div class="bonusAmount">
-+$1.00
-</div>
 
-<p class="muted">
-Claim once every day.
-</p>
+  <!-- REFERRAL LINK -->
 
-<button
-  class="btn primary"
-  id="bonusBtn"
-  onclick="claimDailyBonus()">
-Claim $1.00
-</button>
+  <div class="dashCard refDash">
 
-<p
-  id="bonusNotice"
-  class="notice">
-Checking bonus...
-</p>
+    <h2>
+      👥 Your Referral Link
+    </h2>
 
-</div>
+    <p class="muted">
+      Share this link with friends to invite them.
+    </p>
 
-</div>
+    <div class="refDashBox">
 
-<!-- ACTIVITY -->
+      <input
+        id="referralLink"
+        readonly
+        placeholder="Your referral link">
 
-<div
-  class="dashCard"
-  style="margin-top:15px">
+      <button
+        class="smallBtn"
+        onclick="copyReferralLink()">
+        Copy Link
+      </button>
 
-<h2>
-Recent activity
-</h2>
+    </div>
 
-<div
-  class="activity"
-  id="activity">
+  </div>
 
-<span class="muted">
-Loading…
-</span>
 
-</div>
+  <!-- =================================================
+       AVAILABLE TASKS
+  ================================================== -->
 
-</div>
+  <section
+    class="dashCard taskPanel"
+    id="tasksSection">
 
-<!-- WITHDRAW -->
+    <div class="sectionHead">
 
-<div
-  class="dashCard"
-  style="margin-top:15px">
+      <div>
 
-<h2>
-💸 Withdraw
-</h2>
+        <div class="eyebrow">
+          ✦ EARN MORE
+        </div>
 
-<p class="muted">
-Minimum withdrawal:
-<b style="color:white">
-$50.00
-</b>
-</p>
+        <h2>
+          Available Tasks
+        </h2>
 
-<div class="rewardBox">
+        <p>
+          Complete eligible activities and earn rewards.
+        </p>
 
-<div class="rewardRow">
-<span>
-Minimum
-</span>
+      </div>
 
-<b>
-$50.00
-</b>
-</div>
+      <button
+        class="smallBtn"
+        onclick="loadTasks()">
+        Refresh
+      </button>
 
-<div class="rewardRow">
-<span>
-Methods
-</span>
+    </div>
 
-<b>
-bKash / Nagad
-</b>
-</div>
+    <div
+      id="tasksLoading"
+      class="taskEmpty">
+      Loading tasks...
+    </div>
 
-</div>
+    <div
+      id="tasksList"
+      class="tasksList">
+    </div>
 
-<button
-  class="btn primary"
-  onclick="openWithdraw()">
-Request withdrawal
-</button>
+  </section>
 
-</div>
+
+  <!-- =================================================
+       WATCH + DAILY BONUS
+  ================================================== -->
+
+  <div
+    class="dashGrid"
+    style="
+      margin-top:15px;
+      grid-template-columns:1fr 1fr;
+    ">
+
+
+    <!-- WATCH -->
+
+    <div class="dashCard">
+
+      <h2>
+        🎬 Watch & Earn
+      </h2>
+
+      <div class="adInfo">
+
+        <div class="muted">
+          Today's ads
+        </div>
+
+        <div
+          id="adCounter"
+          style="
+            font-size:28px;
+            font-weight:900;
+            margin:5px 0;
+          ">
+          0 / 30
+        </div>
+
+        <div class="muted">
+
+          Each verified ad:
+
+          <span class="adReward">
+            +$0.50
+          </span>
+
+        </div>
+
+
+        <div
+          class="adButtons"
+          style="
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:12px;
+            margin-top:18px;
+          ">
+
+          <button
+            id="monetagBtn"
+            class="adButton"
+            onclick="watchMonetag()">
+
+            🟣 Monetag
+
+            <span>
+              +$0.50
+            </span>
+
+          </button>
+
+
+          <button
+            id="gigapubBtn"
+            class="adButton"
+            onclick="watchGigaPub()">
+
+            🟢 GigaPub
+
+            <span>
+              +$0.50
+            </span>
+
+          </button>
+
+        </div>
+
+
+        <p
+          id="adNotice"
+          class="notice">
+
+          Choose an ad provider to earn $0.50.
+
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- DAILY BONUS -->
+
+    <div
+      class="dashCard bonusCard">
+
+      <h2>
+        🎁 Daily Bonus
+      </h2>
+
+      <div class="bonusAmount">
+        +$1.00
+      </div>
+
+      <p class="muted">
+        Claim once every day.
+      </p>
+
+      <button
+        class="btn primary"
+        id="bonusBtn"
+        onclick="claimDailyBonus()">
+
+        Claim $1.00
+
+      </button>
+
+      <p
+        id="bonusNotice"
+        class="notice">
+
+        Checking bonus...
+
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <!-- =================================================
+       ACTIVITY
+  ================================================== -->
+
+  <div
+    class="dashCard"
+    style="margin-top:15px">
+
+    <h2>
+      Recent activity
+    </h2>
+
+    <div
+      class="activity"
+      id="activity">
+
+      <span class="muted">
+        Loading…
+      </span>
+
+    </div>
+
+  </div>
+
+
+  <!-- =================================================
+       WITHDRAW
+  ================================================== -->
+
+  <div
+    class="dashCard"
+    style="margin-top:15px">
+
+    <h2>
+      💸 Withdraw
+    </h2>
+
+    <p class="muted">
+
+      Minimum withdrawal:
+
+      <b style="color:white">
+        $50.00
+      </b>
+
+    </p>
+
+    <div class="rewardBox">
+
+      <div class="rewardRow">
+
+        <span>
+          Minimum
+        </span>
+
+        <b>
+          $50.00
+        </b>
+
+      </div>
+
+      <div class="rewardRow">
+
+        <span>
+          Methods
+        </span>
+
+        <b>
+          bKash / Nagad
+        </b>
+
+      </div>
+
+    </div>
+
+    <button
+      class="btn primary"
+      onclick="openWithdraw()">
+
+      Request withdrawal
+
+    </button>
+
+  </div>
 
 </section>
 
-<!-- ================= AUTH MODAL ================= -->
+
+<!-- =====================================================
+     AUTH MODAL
+===================================================== -->
 
 <div
   class="modal"
   id="authModal">
 
-<div class="modalBox">
+  <div class="modalBox">
 
-<button
-  class="close"
-  onclick="closeModal('authModal')">
-×
-</button>
+    <button
+      class="close"
+      onclick="closeModal('authModal')">
+      ×
+    </button>
 
-<h2 id="authTitle">
-Create account
-</h2>
+    <h2 id="authTitle">
+      Create account
+    </h2>
 
-<div id="nameWrap">
 
-<input
-  class="input"
-  id="name"
-  placeholder="Full name">
+    <div id="nameWrap">
+
+      <input
+        class="input"
+        id="name"
+        placeholder="Full name">
+
+    </div>
+
+
+    <input
+      class="input"
+      id="email"
+      type="email"
+      placeholder="Email">
+
+
+    <input
+      class="input"
+      id="password"
+      type="password"
+      placeholder="Password (8+ characters)">
+
+
+    <input
+      class="input"
+      id="refCode"
+      placeholder="Referral code (optional)">
+
+
+    <button
+      class="btn primary"
+      style="
+        width:100%;
+        margin-top:8px;
+      "
+      onclick="submitAuth()"
+      id="authBtn">
+
+      Create account
+
+    </button>
+
+
+    <p
+      class="notice"
+      id="authNotice">
+    </p>
+
+
+    <button
+      class="btn ghost"
+      style="width:100%"
+      onclick="toggleAuth()"
+      id="switchBtn">
+
+      Already have an account?
+      Log in
+
+    </button>
+
+  </div>
 
 </div>
 
-<input
-  class="input"
-  id="email"
-  type="email"
-  placeholder="Email">
 
-<input
-  class="input"
-  id="password"
-  type="password"
-  placeholder="Password (8+ characters)">
-
-<input
-  class="input"
-  id="refCode"
-  placeholder="Referral code (optional)">
-
-<button
-  class="btn primary"
-  style="width:100%;margin-top:8px"
-  onclick="submitAuth()"
-  id="authBtn">
-Create account
-</button>
-
-<p
-  class="notice"
-  id="authNotice">
-</p>
-
-<button
-  class="btn ghost"
-  style="width:100%"
-  onclick="toggleAuth()"
-  id="switchBtn">
-Already have an account? Log in
-</button>
-
-</div>
-</div>
-
-<!-- ================= WITHDRAW MODAL ================= -->
+<!-- =====================================================
+     WITHDRAW MODAL
+===================================================== -->
 
 <div
   class="modal"
   id="withdrawModal">
 
-<div class="modalBox">
+  <div class="modalBox">
 
-<button
-  class="close"
-  onclick="closeModal('withdrawModal')">
-×
-</button>
+    <button
+      class="close"
+      onclick="closeModal('withdrawModal')">
+      ×
+    </button>
 
-<h2>
-Request withdrawal
-</h2>
+    <h2>
+      Request withdrawal
+    </h2>
 
-<p class="muted">
-Minimum withdrawal: $50.00
-</p>
+    <p class="muted">
+      Minimum withdrawal: $50.00
+    </p>
 
-<input
-  class="input"
-  id="wAmount"
-  type="number"
-  min="50"
-  step="0.01"
-  placeholder="Amount in USD">
 
-<select
-  class="input"
-  id="wMethod">
+    <input
+      class="input"
+      id="wAmount"
+      type="number"
+      min="50"
+      step="0.01"
+      placeholder="Amount in USD">
 
-<option value="bkash">
-bKash
-</option>
 
-<option value="nagad">
-Nagad
-</option>
+    <select
+      class="input"
+      id="wMethod">
 
-</select>
+      <option value="bkash">
+        bKash
+      </option>
 
-<input
-  class="input"
-  id="wNumber"
-  inputmode="numeric"
-  placeholder="11-digit account number">
+      <option value="nagad">
+        Nagad
+      </option>
 
-<input
-  class="input"
-  id="wName"
-  placeholder="Account name">
+    </select>
 
-<button
-  class="btn primary"
-  style="width:100%;margin-top:8px"
-  onclick="submitWithdraw()">
 
-Submit request
+    <input
+      class="input"
+      id="wNumber"
+      inputmode="numeric"
+      placeholder="11-digit account number">
 
-</button>
 
-<p
-  class="notice"
-  id="wNotice">
-</p>
+    <input
+      class="input"
+      id="wName"
+      placeholder="Account name">
+
+
+    <button
+      class="btn primary"
+      style="
+        width:100%;
+        margin-top:8px;
+      "
+      onclick="submitWithdraw()">
+
+      Submit request
+
+    </button>
+
+
+    <p
+      class="notice"
+      id="wNotice">
+    </p>
+
+  </div>
 
 </div>
-</div>
 
-/* =========================================================
-   TASK SYSTEM
-========================================================= */
 
-async function loadTasks(){
+<!-- =====================================================
+     FOOTER
+===================================================== -->
 
-  const list = document.getElementById("tasksList");
-  const loading = document.getElementById("tasksLoading");
-
-  if(!list) return;
-
-  list.innerHTML = "";
-
-  if(loading){
-    loading.style.display = "block";
-    loading.textContent = "Loading tasks...";
-  }
-
-  try{
-
-    const response = await fetch("/api/tasks",{
-      headers:{
-        "Authorization":`Bearer ${token}`
-      }
-    });
-
-    const data = await response.json();
-
-    if(!response.ok || !data.ok){
-
-      if(response.status === 401){
-        logout();
-        return;
-      }
-
-      throw new Error(
-        data.error || "Could not load tasks."
-      );
-    }
-
-    if(loading){
-      loading.style.display = "none";
-    }
-
-    if(!data.tasks || !data.tasks.length){
-
-      list.innerHTML = `
-        <div class="taskEmpty">
-          <div style="font-size:35px;margin-bottom:8px;">
-            🎯
-          </div>
-
-          <div style="font-weight:700;">
-            No tasks available right now.
-          </div>
-
-          <div style="margin-top:5px;">
-            Please check again later.
-          </div>
-        </div>
-      `;
-
-      return;
-    }
-
-    list.innerHTML = data.tasks
-      .map(task => renderTask(task))
-      .join("");
-
-    await loadMyTasks();
-
-  }catch(error){
-
-    console.error("Load tasks error:",error);
-
-    if(loading){
-      loading.style.display = "none";
-    }
-
-    list.innerHTML = `
-      <div class="taskEmpty">
-        ⚠️ Could not load tasks.
-        <br>
-        <button
-          class="smallBtn"
-          style="margin-top:12px;"
-          onclick="loadTasks()">
-          Try Again
-        </button>
-      </div>
-    `;
-  }
-}
-
-
-function renderTask(task){
-
-  const reward =
-    Number(task.reward || 0).toFixed(2);
-
-  const icon =
-    escapeHtml(task.icon || "🎯");
-
-  const title =
-    escapeHtml(task.title || "Task");
-
-  const description =
-    escapeHtml(
-      task.description ||
-      "Complete this task to earn a reward."
-    );
-
-  const type =
-    escapeHtml(
-      String(task.task_type || "task")
-        .replace("_"," ")
-        .toUpperCase()
-    );
-
-  return `
-    <div
-      class="taskCard"
-      id="task-card-${task.id}">
-
-      <div class="taskTop">
-
-        <div class="taskIcon">
-          ${icon}
-        </div>
-
-        <div class="taskReward">
-          +$${reward}
-        </div>
-
-      </div>
-
-      <div class="taskTitle">
-        ${title}
-      </div>
-
-      <div class="taskDescription">
-        ${description}
-      </div>
-
-      <div class="taskMeta">
-
-        <span class="taskType">
-          ${type}
-        </span>
-
-        <button
-          class="taskStartBtn"
-          id="task-btn-${task.id}"
-          onclick="startTask(${task.id})">
-          Start
-        </button>
-
-      </div>
-
-      <div
-        id="task-status-${task.id}"
-        style="margin-top:10px;">
-      </div>
-
-    </div>
-  `;
-}
-
-
-/* =========================================================
-   START TASK
-========================================================= */
-
-async function startTask(taskId){
-
-  const button =
-    document.getElementById(
-      `task-btn-${taskId}`
-    );
-
-  const status =
-    document.getElementById(
-      `task-status-${taskId}`
-    );
-
-  if(button){
-
-    button.disabled = true;
-    button.textContent = "Starting...";
-  }
-
-  try{
-
-    const response = await fetch(
-      `/api/tasks/${taskId}/start`,
-      {
-        method:"POST",
-
-        headers:{
-          "Content-Type":"application/json",
-          "Authorization":`Bearer ${token}`
-        }
-      }
-    );
-
-    const data =
-      await response.json();
-
-    if(!response.ok || !data.ok){
-
-      throw new Error(
-        data.error ||
-        "Could not start task."
-      );
-    }
-
-    if(button){
-
-      button.disabled = true;
-      button.textContent = "Pending";
-    }
-
-    if(status){
-
-      status.innerHTML = `
-        <div class="taskPending">
-          ⏳ Task started — waiting for verification
-        </div>
-      `;
-    }
-
-    showNotice(
-      "Task started successfully.",
-      "success"
-    );
-
-    await loadMyTasks();
-
-  }catch(error){
-
-    console.error(
-      "Start task error:",
-      error
-    );
-
-    if(button){
-
-      button.disabled = false;
-      button.textContent = "Start";
-    }
-
-    if(status){
-
-      status.innerHTML = `
-        <div style="color:var(--red);font-size:13px;">
-          ${escapeHtml(error.message)}
-        </div>
-      `;
-    }
-  }
-}
-
-
-/* =========================================================
-   MY TASK STATUS
-========================================================= */
-
-async function loadMyTasks(){
-
-  try{
-
-    const response =
-      await fetch(
-        "/api/my-tasks",
-        {
-          headers:{
-            "Authorization":`Bearer ${token}`
-          }
-        }
-      );
-
-    const data =
-      await response.json();
-
-    if(!response.ok || !data.ok){
-      return;
-    }
-
-    if(!Array.isArray(data.items)){
-      return;
-    }
-
-    data.items.forEach(item => {
-
-      const button =
-        document.getElementById(
-          `task-btn-${item.task_id}`
-        );
-
-      const status =
-        document.getElementById(
-          `task-status-${item.task_id}`
-        );
-
-      if(!button) return;
-
-      if(item.status === "completed"){
-
-        button.disabled = true;
-        button.textContent = "Completed";
-
-        if(status){
-
-          status.innerHTML = `
-            <div class="taskCompleted">
-              ✓ Completed — reward credited
-            </div>
-          `;
-        }
-
-      }else if(item.status === "pending"){
-
-        button.disabled = true;
-        button.textContent = "Pending";
-
-        if(status){
-
-          status.innerHTML = `
-            <div class="taskPending">
-              ⏳ Waiting for verification
-            </div>
-          `;
-        }
-
-      }else if(item.status === "rejected"){
-
-        button.disabled = false;
-        button.textContent = "Start Again";
-
-        if(status){
-
-          status.innerHTML = `
-            <div style="color:var(--red);font-size:13px;">
-              Task was rejected
-            </div>
-          `;
-        }
-      }
-
-    });
-
-  }catch(error){
-
-    console.error(
-      "My tasks error:",
-      error
-    );
-  }
-}
-
-
-/* =========================================================
-   REFERRAL CODE
-========================================================= */
-
-function copyReferralCode(){
-
-  const element =
-    document.getElementById(
-      "dashReferral"
-    );
-
-  if(!element) return;
-
-  const code =
-    element.textContent.trim();
-
-  if(!code || code === "—"){
-    return;
-  }
-
-  navigator.clipboard
-    .writeText(code)
-    .then(() => {
-
-      showNotice(
-        "Referral code copied.",
-        "success"
-      );
-
-    })
-    .catch(() => {
-
-      showNotice(
-        "Could not copy referral code.",
-        "error"
-      );
-    });
-}
-  
 <footer>
 
-<div class="wrap footer">
+  <div class="wrap footer">
 
-© 2026 TaskMint · Terms · Privacy · Contact
+    © 2026 TaskMint · Terms · Privacy · Contact
 
-</div>
+  </div>
 
 </footer>
+
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
 
 <script>
 
@@ -1994,13 +2020,88 @@ let token =
 const $ = id =>
   document.getElementById(id);
 
-// ======================================
-// AUTH
-// ======================================
+
+/* =====================================================
+   GENERAL NOTICE
+===================================================== */
+
+function showNotice(message,type=""){
+
+  const old =
+    document.querySelector(".globalNotice");
+
+  if(old){
+    old.remove();
+  }
+
+  const notice =
+    document.createElement("div");
+
+  notice.className =
+    "globalNotice";
+
+  notice.textContent =
+    message;
+
+  notice.style.position =
+    "fixed";
+
+  notice.style.left =
+    "50%";
+
+  notice.style.bottom =
+    "22px";
+
+  notice.style.transform =
+    "translateX(-50%)";
+
+  notice.style.zIndex =
+    "100";
+
+  notice.style.padding =
+    "12px 16px";
+
+  notice.style.borderRadius =
+    "12px";
+
+  notice.style.background =
+    "#101b2d";
+
+  notice.style.border =
+    "1px solid var(--line)";
+
+  notice.style.color =
+    type === "error"
+      ? "var(--red)"
+      : "var(--green)";
+
+  notice.style.fontSize =
+    "13px";
+
+  notice.style.fontWeight =
+    "700";
+
+  document.body.appendChild(
+    notice
+  );
+
+  setTimeout(() => {
+
+    notice.remove();
+
+  },3000);
+
+}
+
+
+/* =====================================================
+   AUTH
+===================================================== */
 
 function openAuth(mode){
 
-  authMode = mode;
+  authMode =
+    mode;
 
   $("authTitle").textContent =
     mode === "register"
@@ -2027,11 +2128,14 @@ function openAuth(mode){
       ? "Already have an account? Log in"
       : "Need an account? Create one";
 
-  $("authNotice").textContent = "";
+  $("authNotice").textContent =
+    "";
 
   $("authModal").style.display =
     "flex";
+
 }
+
 
 function toggleAuth(){
 
@@ -2040,66 +2144,135 @@ function toggleAuth(){
       ? "login"
       : "register"
   );
+
 }
+
 
 function closeModal(id){
 
-  $(id).style.display =
-    "none";
+  const modal =
+    $(id);
+
+  if(modal){
+    modal.style.display =
+      "none";
+  }
+
 }
 
-// ======================================
-// LOGIN / REGISTER
-// ======================================
+
+/* Close modal by clicking outside */
+
+document.addEventListener(
+  "click",
+  function(e){
+
+    if(
+      e.target.classList.contains(
+        "modal"
+      )
+    ){
+
+      e.target.style.display =
+        "none";
+
+    }
+
+  }
+);
+
+
+/* =====================================================
+   LOGIN / REGISTER
+===================================================== */
 
 async function submitAuth(){
 
+  const email =
+    $("email").value.trim();
+
+  const password =
+    $("password").value;
+
+  if(!email || !password){
+
+    $("authNotice").textContent =
+      "❌ Email and password are required.";
+
+    return;
+
+  }
+
+
   const payload = {
-    email: $("email").value,
-    password: $("password").value
+
+    email,
+    password
+
   };
+
 
   if(authMode === "register"){
 
     payload.displayName =
-      $("name").value;
+      $("name").value.trim();
 
-    // যদি referral link থেকে user আসে,
-    // সেই code automatically ব্যবহার হবে।
+    if(!payload.displayName){
+
+      $("authNotice").textContent =
+        "❌ Please enter your name.";
+
+      return;
+
+    }
+
+
     const savedReferral =
       localStorage.getItem(
         "taskmint_referral"
       ) || "";
 
-    // Referral link-এর code থাকলে সেটাই priority
+
     payload.referralCode =
       savedReferral ||
       $("refCode").value.trim();
+
   }
+
 
   $("authNotice").textContent =
     "Please wait...";
 
+
+  $("authBtn").disabled =
+    true;
+
+
   try{
 
-    const r = await fetch(
-      authMode === "register"
-        ? "/api/register"
-        : "/api/login",
-      {
-        method:"POST",
+    const r =
+      await fetch(
+        authMode === "register"
+          ? "/api/register"
+          : "/api/login",
+        {
+          method:"POST",
 
-        headers:{
-          "Content-Type":
-            "application/json"
-        },
+          headers:{
+            "Content-Type":
+              "application/json"
+          },
 
-        body: JSON.stringify(payload)
-      }
-    );
+          body:
+            JSON.stringify(payload)
+
+        }
+      );
+
 
     const d =
       await r.json();
+
 
     if(!r.ok || !d.ok){
 
@@ -2107,95 +2280,135 @@ async function submitAuth(){
         d.error ||
         "Request failed"
       );
+
     }
 
-    token = d.token;
+
+    token =
+      d.token;
+
 
     localStorage.setItem(
       "taskmint_token",
       token
     );
 
-    // Registration সফল হলে referral code
-    // আর দরকার নেই
+
     if(authMode === "register"){
+
       localStorage.removeItem(
         "taskmint_referral"
       );
+
     }
+
 
     closeModal(
       "authModal"
     );
 
+
     await loadDashboard();
+
 
   }catch(e){
 
     $("authNotice").textContent =
       "❌ " + e.message;
+
+  }finally{
+
+    $("authBtn").disabled =
+      false;
+
   }
+
 }
 
-// ======================================
-// DASHBOARD
-// ======================================
+
+/* =====================================================
+   DASHBOARD
+===================================================== */
 
 async function loadDashboard(){
 
-  if(!token) return;
+  if(!token){
+    return;
+  }
+
 
   try{
 
-    const r = await fetch(
-      "/api/me",
-      {
-        headers:{
-          Authorization:
-            "Bearer " + token
+    const r =
+      await fetch(
+        "/api/me",
+        {
+          headers:{
+            Authorization:
+              "Bearer " + token
+          }
         }
-      }
-    );
+      );
+
 
     if(!r.ok){
+
       throw new Error(
         "Session expired"
       );
+
     }
+
 
     const d =
       await r.json();
 
+
     $("landing").style.display =
       "none";
+
 
     document
       .querySelectorAll(
         ".stats,.section"
       )
-      .forEach(x =>
-        x.style.display = "none"
-      );
+      .forEach(x => {
+
+        x.style.display =
+          "none";
+
+      });
+
 
     $("dashboard").style.display =
       "block";
 
+
     $("dashName").textContent =
       d.user.display_name;
+
 
     setMoney(
       "dashBalance",
       d.user.balance
     );
 
+
     setMoney(
       "dashTotal",
       d.user.total_earned
     );
 
+
+    setReferralCode(
+      d.user.referral_code
+    );
+
+
     setReferralLink(
-  d.user.referral_code
-);
+      d.user.referral_code
+    );
+
 
     await loadActivity();
 
@@ -2203,31 +2416,252 @@ async function loadDashboard(){
 
     await loadAdStatus();
 
+    await loadTasks();
+
+
   }catch(e){
+
+    console.error(
+      "Dashboard error:",
+      e
+    );
+
 
     localStorage.removeItem(
       "taskmint_token"
     );
 
-    token = null;
+
+    token =
+      null;
+
   }
+
 }
 
-// ======================================
-// MONEY DISPLAY
-// ======================================
 
-function setMoney(id,value){
+/* =====================================================
+   MONEY
+===================================================== */
 
-  $(id).textContent =
+function setMoney(
+  id,
+  value
+){
+
+  const element =
+    $(id);
+
+  if(!element){
+    return;
+  }
+
+  element.textContent =
     "$" +
-    Number(value || 0)
-      .toFixed(2);
+    Number(
+      value || 0
+    ).toFixed(2);
+
 }
 
-// ======================================
-// ACTIVITY
-// ======================================
+
+/* =====================================================
+   REFERRAL CODE
+===================================================== */
+
+function setReferralCode(
+  code
+){
+
+  const element =
+    $("dashReferral");
+
+  if(!element){
+    return;
+  }
+
+  element.textContent =
+    code || "—";
+
+}
+
+
+async function copyReferralCode(){
+
+  const element =
+    $("dashReferral");
+
+  if(!element){
+    return;
+  }
+
+  const code =
+    element.textContent.trim();
+
+
+  if(
+    !code ||
+    code === "—"
+  ){
+
+    showNotice(
+      "Referral code is not available.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    await navigator.clipboard.writeText(
+      code
+    );
+
+    showNotice(
+      "Referral code copied.",
+      "success"
+    );
+
+  }catch{
+
+    showNotice(
+      "Could not copy referral code.",
+      "error"
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   REFERRAL LINK
+===================================================== */
+
+function makeReferralLink(
+  referralCode
+){
+
+  return (
+    `${window.location.origin}/?ref=` +
+    encodeURIComponent(
+      referralCode
+    )
+  );
+
+}
+
+
+function setReferralLink(
+  referralCode
+){
+
+  const input =
+    $("referralLink");
+
+  if(
+    !input ||
+    !referralCode
+  ){
+
+    return;
+
+  }
+
+  input.value =
+    makeReferralLink(
+      referralCode
+    );
+
+}
+
+
+async function copyReferralLink(){
+
+  const input =
+    $("referralLink");
+
+  if(
+    !input ||
+    !input.value
+  ){
+
+    return;
+
+  }
+
+
+  try{
+
+    await navigator.clipboard.writeText(
+      input.value
+    );
+
+    showNotice(
+      "Referral link copied.",
+      "success"
+    );
+
+  }catch{
+
+    input.select();
+
+    document.execCommand(
+      "copy"
+    );
+
+    showNotice(
+      "Referral link copied.",
+      "success"
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   GET REFERRAL FROM URL
+===================================================== */
+
+function getReferralCodeFromURL(){
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  return (
+    params
+      .get("ref") ||
+    ""
+  )
+  .trim()
+  .toUpperCase();
+
+}
+
+
+const referralFromURL =
+  getReferralCodeFromURL();
+
+
+if(referralFromURL){
+
+  localStorage.setItem(
+    "taskmint_referral",
+    referralFromURL
+  );
+
+}
+
+
+/* =====================================================
+   ACTIVITY
+===================================================== */
 
 async function loadActivity(){
 
@@ -2244,8 +2678,10 @@ async function loadActivity(){
         }
       );
 
+
     const d =
       await r.json();
+
 
     if(
       d.items &&
@@ -2257,13 +2693,18 @@ async function loadActivity(){
           .map(x => {
 
             const amount =
-              Number(x.amount);
+              Number(
+                x.amount
+              );
 
             const positive =
               amount >= 0;
 
+
             return `
+
               <div>
+
                 <span>
                   ${escapeHtml(
                     x.description ||
@@ -2281,33 +2722,43 @@ async function loadActivity(){
                     positive
                       ? "+"
                       : "-"
-                  }$${Math.abs(
-                    amount
-                  ).toFixed(2)}
+                  }${
+                    Math.abs(
+                      amount
+                    ).toFixed(2)
+                  }
 
                 </b>
+
               </div>
+
             `;
 
           })
           .join("");
 
+
     }else{
 
       $("activity").innerHTML =
         "<span class='muted'>No activity yet.</span>";
+
     }
+
 
   }catch(e){
 
     $("activity").innerHTML =
       "<span class='error'>Could not load activity.</span>";
+
   }
+
 }
 
-// ======================================
-// DAILY BONUS STATUS
-// ======================================
+
+/* =====================================================
+   DAILY BONUS STATUS
+===================================================== */
 
 async function loadDailyBonusStatus(){
 
@@ -2324,8 +2775,10 @@ async function loadDailyBonusStatus(){
         }
       );
 
+
     const d =
       await r.json();
+
 
     if(
       d.ok &&
@@ -2341,6 +2794,7 @@ async function loadDailyBonusStatus(){
       $("bonusNotice").innerHTML =
         "<span class='success'>✓ You already claimed today's $1.00 bonus.</span>";
 
+
     }else{
 
       $("bonusBtn").disabled =
@@ -2354,20 +2808,27 @@ async function loadDailyBonusStatus(){
 
     }
 
+
   }catch(e){
 
     $("bonusNotice").textContent =
       "Could not check bonus.";
+
   }
+
 }
 
-// ======================================
-// CLAIM DAILY BONUS
-// ======================================
+
+/* =====================================================
+   CLAIM DAILY BONUS
+===================================================== */
 
 async function claimDailyBonus(){
 
-  if(!token) return;
+  if(!token){
+    return;
+  }
+
 
   $("bonusBtn").disabled =
     true;
@@ -2378,6 +2839,7 @@ async function claimDailyBonus(){
   $("bonusNotice").textContent =
     "Please wait...";
 
+
   try{
 
     const r =
@@ -2385,6 +2847,7 @@ async function claimDailyBonus(){
         "/api/daily-bonus",
         {
           method:"POST",
+
           headers:{
             Authorization:
               "Bearer " + token
@@ -2392,37 +2855,51 @@ async function claimDailyBonus(){
         }
       );
 
+
     const d =
       await r.json();
 
-    if(!r.ok || !d.ok){
+
+    if(
+      !r.ok ||
+      !d.ok
+    ){
 
       throw new Error(
         d.error ||
         "Could not claim bonus."
       );
+
     }
+
 
     $("bonusBtn").textContent =
       "Claimed Today";
 
+
     $("bonusNotice").innerHTML =
       `<span class="success">
-        ✓ +$${Number(d.reward).toFixed(2)}
+        ✓ +$${Number(
+          d.reward
+        ).toFixed(2)}
         added to your balance.
       </span>`;
+
 
     setMoney(
       "dashBalance",
       d.balance
     );
 
+
     setMoney(
       "dashTotal",
       d.totalEarned
     );
 
+
     await loadActivity();
+
 
   }catch(e){
 
@@ -2432,22 +2909,29 @@ async function claimDailyBonus(){
     $("bonusBtn").textContent =
       "Claim $1.00";
 
+
     $("bonusNotice").innerHTML =
       `<span class="error">
-        ❌ ${escapeHtml(e.message)}
+        ❌ ${escapeHtml(
+          e.message
+        )}
       </span>`;
+
   }
+
 }
 
-// ======================================
-// WATCH & EARN
-// MONETAG + GIGAPUB
-// ======================================
 
-let adBusy = false;
+/* =====================================================
+   ADS
+===================================================== */
+
+let adBusy =
+  false;
 
 
-// Load today's ad status
+/* Load ad status */
+
 async function loadAdStatus(){
 
   try{
@@ -2463,15 +2947,23 @@ async function loadAdStatus(){
         }
       );
 
+
     const d =
       await r.json();
 
-    if(!r.ok || !d.ok){
+
+    if(
+      !r.ok ||
+      !d.ok
+    ){
+
       throw new Error(
         d.error ||
         "Could not load ad status."
       );
+
     }
+
 
     updateAdUI(
       d.watched,
@@ -2479,25 +2971,47 @@ async function loadAdStatus(){
       d.remaining
     );
 
+
   }catch(e){
 
-    $("adNotice").textContent =
-      "Could not load ad limit.";
+    if($("adNotice")){
+
+      $("adNotice").textContent =
+        "Could not load ad limit.";
+
+    }
+
   }
+
 }
 
 
-// Update buttons
+/* Update ad buttons */
+
 function updateAdUI(
   watched,
   limit,
   remaining
 ){
 
+  if(
+    !$("adCounter") ||
+    !$("monetagBtn") ||
+    !$("gigapubBtn")
+  ){
+
+    return;
+
+  }
+
+
   $("adCounter").textContent =
     `${watched} / ${limit}`;
 
-  if(remaining <= 0){
+
+  if(
+    Number(remaining) <= 0
+  ){
 
     $("monetagBtn").disabled =
       true;
@@ -2505,16 +3019,20 @@ function updateAdUI(
     $("gigapubBtn").disabled =
       true;
 
+
     $("monetagBtn").innerHTML =
       "🟣 Limit Reached";
+
 
     $("gigapubBtn").innerHTML =
       "🟢 Limit Reached";
 
+
     $("adNotice").innerHTML =
       `<span class="success">
-        ✓ Today's 30-ad limit has been reached.
+        ✓ Today's ad limit has been reached.
       </span>`;
+
 
   }else{
 
@@ -2524,16 +3042,21 @@ function updateAdUI(
     $("gigapubBtn").disabled =
       false;
 
+
     $("monetagBtn").innerHTML =
       "🟣 Monetag<br>+$0.50";
 
+
     $("gigapubBtn").innerHTML =
       "🟢 GigaPub<br>+$0.50";
+
   }
+
 }
 
 
-// Claim reward from backend
+/* Credit ad reward */
+
 async function creditAdReward(
   provider
 ){
@@ -2556,30 +3079,47 @@ async function creditAdReward(
           JSON.stringify({
             provider
           })
+
       }
     );
+
 
   const d =
     await r.json();
 
-  if(!r.ok || !d.ok){
+
+  if(
+    !r.ok ||
+    !d.ok
+  ){
 
     throw new Error(
       d.error ||
       "Reward could not be added."
     );
+
   }
 
+
   return d;
+
 }
 
 
-// Monetag
+/* =====================================================
+   MONETAG
+===================================================== */
+
 async function watchMonetag(){
 
-  if(adBusy) return;
+  if(adBusy){
+    return;
+  }
 
-  adBusy = true;
+
+  adBusy =
+    true;
+
 
   $("monetagBtn").disabled =
     true;
@@ -2587,8 +3127,10 @@ async function watchMonetag(){
   $("gigapubBtn").disabled =
     true;
 
+
   $("adNotice").textContent =
     "Loading Monetag ad...";
+
 
   try{
 
@@ -2603,8 +3145,10 @@ async function watchMonetag(){
         }
       );
 
+
     const s =
       await status.json();
+
 
     if(
       !s.ok ||
@@ -2612,13 +3156,15 @@ async function watchMonetag(){
     ){
 
       throw new Error(
-        "Today's 30-ad limit has been reached."
+        "Today's ad limit has been reached."
       );
+
     }
 
 
     const fn =
       window.show_11762706;
+
 
     if(
       typeof fn !==
@@ -2628,6 +3174,7 @@ async function watchMonetag(){
       throw new Error(
         "Monetag ad is not ready yet. Please try again."
       );
+
     }
 
 
@@ -2635,11 +3182,9 @@ async function watchMonetag(){
       "Please complete the Monetag ad...";
 
 
-    // Show rewarded ad
     await fn();
 
 
-    // Ad completed
     const reward =
       await creditAdReward(
         "monetag"
@@ -2650,6 +3195,7 @@ async function watchMonetag(){
       "dashBalance",
       reward.balance
     );
+
 
     setMoney(
       "dashTotal",
@@ -2683,23 +3229,33 @@ async function watchMonetag(){
         )}
       </span>`;
 
-    await loadAdStatus();
 
   }finally{
 
-    adBusy = false;
+    adBusy =
+      false;
 
     await loadAdStatus();
+
   }
+
 }
 
 
-// GigaPub
+/* =====================================================
+   GIGAPUB
+===================================================== */
+
 async function watchGigaPub(){
 
-  if(adBusy) return;
+  if(adBusy){
+    return;
+  }
 
-  adBusy = true;
+
+  adBusy =
+    true;
+
 
   $("monetagBtn").disabled =
     true;
@@ -2707,8 +3263,10 @@ async function watchGigaPub(){
   $("gigapubBtn").disabled =
     true;
 
+
   $("adNotice").textContent =
     "Loading GigaPub ad...";
+
 
   try{
 
@@ -2723,8 +3281,10 @@ async function watchGigaPub(){
         }
       );
 
+
     const s =
       await status.json();
+
 
     if(
       !s.ok ||
@@ -2732,8 +3292,9 @@ async function watchGigaPub(){
     ){
 
       throw new Error(
-        "Today's 30-ad limit has been reached."
+        "Today's ad limit has been reached."
       );
+
     }
 
 
@@ -2745,6 +3306,7 @@ async function watchGigaPub(){
       throw new Error(
         "GigaPub ad is not ready yet. Please try again."
       );
+
     }
 
 
@@ -2752,11 +3314,9 @@ async function watchGigaPub(){
       "Please complete the GigaPub ad...";
 
 
-    // Show rewarded GigaPub ad
     await window.showGiga();
 
 
-    // Ad completed
     const reward =
       await creditAdReward(
         "gigapub"
@@ -2767,6 +3327,7 @@ async function watchGigaPub(){
       "dashBalance",
       reward.balance
     );
+
 
     setMoney(
       "dashTotal",
@@ -2800,73 +3361,673 @@ async function watchGigaPub(){
         )}
       </span>`;
 
-    await loadAdStatus();
 
   }finally{
 
-    adBusy = false;
+    adBusy =
+      false;
 
     await loadAdStatus();
-  }
-}
-
-// ======================================
-// REFERRAL
-// ======================================
-
-function copyReferral(){
-
-  const code =
-    $("dashReferral")
-      .textContent;
-
-  if(
-    navigator.clipboard
-  ){
-
-    navigator.clipboard
-      .writeText(code);
 
   }
 
-  alert(
-    "Referral code copied."
-  );
 }
 
-// ======================================
-// WITHDRAW
-// ======================================
+
+/* =====================================================
+   TASK SYSTEM
+===================================================== */
+
+
+/* Load available tasks */
+
+async function loadTasks(){
+
+  const list =
+    $("tasksList");
+
+  const loading =
+    $("tasksLoading");
+
+
+  if(!list){
+    return;
+  }
+
+
+  list.innerHTML =
+    "";
+
+
+  if(loading){
+
+    loading.style.display =
+      "block";
+
+    loading.textContent =
+      "Loading tasks...";
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/tasks",
+        {
+          headers:{
+            Authorization:
+              `Bearer ${token}`
+          }
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(
+      !response.ok ||
+      !data.ok
+    ){
+
+      if(
+        response.status === 401
+      ){
+
+        logout();
+        return;
+
+      }
+
+
+      throw new Error(
+        data.error ||
+        "Could not load tasks."
+      );
+
+    }
+
+
+    if(loading){
+
+      loading.style.display =
+        "none";
+
+    }
+
+
+    if(
+      !data.tasks ||
+      !data.tasks.length
+    ){
+
+      list.innerHTML = `
+
+        <div class="taskEmpty">
+
+          <div
+            style="
+              font-size:35px;
+              margin-bottom:8px;
+            ">
+            🎯
+          </div>
+
+          <div
+            style="font-weight:700;">
+            No tasks available right now.
+          </div>
+
+          <div style="margin-top:5px;">
+            Please check again later.
+          </div>
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+
+    list.innerHTML =
+      data.tasks
+        .map(
+          task =>
+            renderTask(task)
+        )
+        .join("");
+
+
+    await loadMyTasks();
+
+
+  }catch(error){
+
+    console.error(
+      "Load tasks error:",
+      error
+    );
+
+
+    if(loading){
+
+      loading.style.display =
+        "none";
+
+    }
+
+
+    list.innerHTML = `
+
+      <div class="taskEmpty">
+
+        ⚠️ Could not load tasks.
+
+        <br>
+
+        <button
+          class="smallBtn"
+          style="margin-top:12px;"
+          onclick="loadTasks()">
+
+          Try Again
+
+        </button>
+
+      </div>
+
+    `;
+
+  }
+
+}
+
+
+/* Render individual task */
+
+function renderTask(
+  task
+){
+
+  const reward =
+    Number(
+      task.reward || 0
+    ).toFixed(2);
+
+
+  const icon =
+    escapeHtml(
+      task.icon ||
+      "🎯"
+    );
+
+
+  const title =
+    escapeHtml(
+      task.title ||
+      "Task"
+    );
+
+
+  const description =
+    escapeHtml(
+      task.description ||
+      "Complete this task to earn a reward."
+    );
+
+
+  const type =
+    escapeHtml(
+      String(
+        task.task_type ||
+        "task"
+      )
+      .replaceAll(
+        "_",
+        " "
+      )
+      .toUpperCase()
+    );
+
+
+  return `
+
+    <div
+      class="taskCard"
+      id="task-card-${task.id}">
+
+
+      <div class="taskTop">
+
+        <div class="taskIcon">
+          ${icon}
+        </div>
+
+        <div class="taskReward">
+          +$${reward}
+        </div>
+
+      </div>
+
+
+      <div class="taskTitle">
+        ${title}
+      </div>
+
+
+      <div class="taskDescription">
+        ${description}
+      </div>
+
+
+      <div class="taskMeta">
+
+        <span class="taskType">
+          ${type}
+        </span>
+
+
+        <button
+          class="taskStartBtn"
+          id="task-btn-${task.id}"
+          onclick="startTask(${task.id})">
+
+          Start
+
+        </button>
+
+      </div>
+
+
+      <div
+        id="task-status-${task.id}"
+        style="margin-top:10px;">
+      </div>
+
+
+    </div>
+
+  `;
+
+}
+
+
+/* =====================================================
+   START TASK
+===================================================== */
+
+async function startTask(
+  taskId
+){
+
+  const button =
+    document.getElementById(
+      `task-btn-${taskId}`
+    );
+
+
+  const status =
+    document.getElementById(
+      `task-status-${taskId}`
+    );
+
+
+  if(button){
+
+    button.disabled =
+      true;
+
+    button.textContent =
+      "Starting...";
+
+  }
+
+
+  try{
+
+    const response =
+      await fetch(
+        `/api/tasks/${taskId}/start`,
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json",
+
+            "Authorization":
+              `Bearer ${token}`
+          }
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(
+      !response.ok ||
+      !data.ok
+    ){
+
+      throw new Error(
+        data.error ||
+        "Could not start task."
+      );
+
+    }
+
+
+    if(button){
+
+      button.disabled =
+        true;
+
+      button.textContent =
+        "Pending";
+
+    }
+
+
+    if(status){
+
+      status.innerHTML = `
+
+        <div class="taskPending">
+
+          ⏳ Task started —
+          waiting for verification
+
+        </div>
+
+      `;
+
+    }
+
+
+    showNotice(
+      "Task started successfully.",
+      "success"
+    );
+
+
+    await loadMyTasks();
+
+
+  }catch(error){
+
+    console.error(
+      "Start task error:",
+      error
+    );
+
+
+    if(button){
+
+      button.disabled =
+        false;
+
+      button.textContent =
+        "Start";
+
+    }
+
+
+    if(status){
+
+      status.innerHTML = `
+
+        <div class="taskRejected">
+
+          ❌ ${escapeHtml(
+            error.message
+          )}
+
+        </div>
+
+      `;
+
+    }
+
+  }
+
+}
+
+
+/* =====================================================
+   MY TASK STATUS
+===================================================== */
+
+async function loadMyTasks(){
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/my-tasks",
+        {
+          headers:{
+            Authorization:
+              `Bearer ${token}`
+          }
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(
+      !response.ok ||
+      !data.ok
+    ){
+
+      return;
+
+    }
+
+
+    if(
+      !Array.isArray(
+        data.items
+      )
+    ){
+
+      return;
+
+    }
+
+
+    data.items.forEach(
+      item => {
+
+        const button =
+          document.getElementById(
+            `task-btn-${item.task_id}`
+          );
+
+
+        const status =
+          document.getElementById(
+            `task-status-${item.task_id}`
+          );
+
+
+        if(!button){
+          return;
+        }
+
+
+        if(
+          item.status ===
+          "completed"
+        ){
+
+          button.disabled =
+            true;
+
+          button.textContent =
+            "Completed";
+
+
+          if(status){
+
+            status.innerHTML = `
+
+              <div class="taskCompleted">
+
+                ✓ Completed —
+                reward credited
+
+              </div>
+
+            `;
+
+          }
+
+
+        }else if(
+          item.status ===
+          "pending"
+        ){
+
+          button.disabled =
+            true;
+
+          button.textContent =
+            "Pending";
+
+
+          if(status){
+
+            status.innerHTML = `
+
+              <div class="taskPending">
+
+                ⏳ Waiting for verification
+
+              </div>
+
+            `;
+
+          }
+
+
+        }else if(
+          item.status ===
+          "rejected"
+        ){
+
+          button.disabled =
+            false;
+
+          button.textContent =
+            "Start Again";
+
+
+          if(status){
+
+            status.innerHTML = `
+
+              <div class="taskRejected">
+
+                Task was rejected
+
+              </div>
+
+            `;
+
+          }
+
+        }
+
+      }
+    );
+
+
+  }catch(error){
+
+    console.error(
+      "My tasks error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   WITHDRAW
+===================================================== */
 
 function openWithdraw(){
 
   $("withdrawModal")
-    .style.display = "flex";
+    .style.display =
+    "flex";
 
   $("wNotice")
-    .textContent = "";
+    .textContent =
+    "";
+
 }
+
 
 async function submitWithdraw(){
 
+  const amount =
+    $("wAmount").value;
+
+  const method =
+    $("wMethod").value;
+
+  const accountNumber =
+    $("wNumber").value.trim();
+
+  const accountName =
+    $("wName").value.trim();
+
+
+  if(
+    !amount ||
+    !accountNumber ||
+    !accountName
+  ){
+
+    $("wNotice").innerHTML =
+      `<span class="error">
+        ❌ Please complete all fields.
+      </span>`;
+
+    return;
+
+  }
+
+
   const body = {
 
-    amount:
-      $("wAmount").value,
+    amount,
 
-    method:
-      $("wMethod").value,
+    method,
 
-    accountNumber:
-      $("wNumber").value,
+    accountNumber,
 
-    accountName:
-      $("wName").value
+    accountName
 
   };
 
+
   $("wNotice").textContent =
     "Submitting...";
+
 
   try{
 
@@ -2875,6 +4036,7 @@ async function submitWithdraw(){
         "/api/withdrawals",
         {
           method:"POST",
+
           headers:{
             "Content-Type":
               "application/json",
@@ -2882,45 +4044,71 @@ async function submitWithdraw(){
             Authorization:
               "Bearer " + token
           },
+
           body:
-            JSON.stringify(body)
+            JSON.stringify(
+              body
+            )
+
         }
       );
+
 
     const d =
       await r.json();
 
-    if(!r.ok || !d.ok){
+
+    if(
+      !r.ok ||
+      !d.ok
+    ){
 
       throw new Error(
         d.error ||
         "Failed"
       );
+
     }
+
 
     $("wNotice").innerHTML =
       `<span class="success">
-        ✓ ${escapeHtml(d.message)}
+        ✓ ${escapeHtml(
+          d.message
+        )}
       </span>`;
 
-    $("wAmount").value = "";
-    $("wNumber").value = "";
-    $("wName").value = "";
+
+    $("wAmount").value =
+      "";
+
+    $("wNumber").value =
+      "";
+
+    $("wName").value =
+      "";
+
 
     await loadDashboard();
+
 
   }catch(e){
 
     $("wNotice").innerHTML =
       `<span class="error">
-        ❌ ${escapeHtml(e.message)}
+        ❌ ${escapeHtml(
+          e.message
+        )}
       </span>`;
+
   }
+
 }
 
-// ======================================
-// LOGOUT
-// ======================================
+
+/* =====================================================
+   LOGOUT
+===================================================== */
 
 function logout(){
 
@@ -2928,33 +4116,48 @@ function logout(){
     "taskmint_token"
   );
 
+  token =
+    null;
+
   location.reload();
+
 }
 
-// ======================================
-// HTML ESCAPE
-// ======================================
 
-function escapeHtml(value){
+/* =====================================================
+   HTML ESCAPE
+===================================================== */
 
-  return String(value ?? "")
-    .replace(
-      /[&<>"']/g,
-      function(m){
-        return {
-          "&":"&amp;",
-          "<":"&lt;",
-          ">":"&gt;",
-          '"':"&quot;",
-          "'":"&#039;"
-        }[m];
-      }
-    );
+function escapeHtml(
+  value
+){
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /[&<>"']/g,
+    function(m){
+
+      return {
+
+        "&":"&amp;",
+        "<":"&lt;",
+        ">":"&gt;",
+        '"':"&quot;",
+        "'":"&#039;"
+
+      }[m];
+
+    }
+  );
+
 }
 
-// ======================================
-// AUTO LOGIN
-// ======================================
+
+/* =====================================================
+   AUTO LOGIN
+===================================================== */
 
 if(token){
 
@@ -2962,92 +4165,6 @@ if(token){
 
 }
 
-  // =========================
-// REFERRAL LINK
-// =========================
-
-function makeReferralLink(referralCode) {
-
-  return `${window.location.origin}/?ref=${encodeURIComponent(referralCode)}`;
-
-}
-
-
-function setReferralLink(referralCode) {
-
-  const input =
-    document.getElementById("referralLink");
-
-  if (!input || !referralCode) {
-    return;
-  }
-
-  input.value =
-    makeReferralLink(referralCode);
-
-}
-
-
-async function copyReferralLink() {
-
-  const input =
-    document.getElementById("referralLink");
-
-  if (!input || !input.value) {
-    return;
-  }
-
-  try {
-
-    await navigator.clipboard.writeText(
-      input.value
-    );
-
-    alert("Referral link copied!");
-
-  } catch {
-
-    input.select();
-
-    document.execCommand("copy");
-
-    alert("Referral link copied!");
-  }
-
-}
-
-
-// =========================
-// GET REFERRAL FROM URL
-// =========================
-
-function getReferralCodeFromURL() {
-
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
-
-  return (
-    params.get("ref") || ""
-  ).trim().toUpperCase();
-
-}
-
-
-const referralFromURL =
-  getReferralCodeFromURL();
-
-
-if (referralFromURL) {
-
-  localStorage.setItem(
-    "taskmint_referral",
-    referralFromURL
-  );
-
-}
-  
 </script>
 
 </body>
