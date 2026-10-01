@@ -2394,36 +2394,90 @@ async function init() {
     }
 
 
-    /*
-      SAFE MIGRATION
+    /* Safe migrations for task system */
 
-      If tm_tasks was created by an older
-      schema, these columns are added
-      without deleting existing data.
-    */
+await pool.query(`
+  ALTER TABLE tm_tasks
+  ADD COLUMN IF NOT EXISTS provider VARCHAR(80)
+`);
 
-    await pool.query(`
-      ALTER TABLE tm_tasks
-      ADD COLUMN IF NOT EXISTS provider VARCHAR(50);
+await pool.query(`
+  ALTER TABLE tm_tasks
+  ADD COLUMN IF NOT EXISTS provider_task_id VARCHAR(255)
+`);
 
-      ALTER TABLE tm_tasks
-      ADD COLUMN IF NOT EXISTS provider_task_id VARCHAR(255);
+await pool.query(`
+  ALTER TABLE tm_tasks
+  ADD COLUMN IF NOT EXISTS icon VARCHAR(20)
+`);
 
-      ALTER TABLE tm_tasks
-      ADD COLUMN IF NOT EXISTS icon VARCHAR(20) DEFAULT '🎯';
+await pool.query(`
+  ALTER TABLE tm_tasks
+  ADD COLUMN IF NOT EXISTS daily_limit INTEGER
+`);
 
-      ALTER TABLE tm_tasks
-      ADD COLUMN IF NOT EXISTS daily_limit INTEGER;
+await pool.query(`
+  ALTER TABLE tm_task_completions
+  ADD COLUMN IF NOT EXISTS status VARCHAR(20)
+`);
 
-      ALTER TABLE tm_task_completions
-      ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending';
+await pool.query(`
+  ALTER TABLE tm_task_completions
+  ADD COLUMN IF NOT EXISTS started_at TIMESTAMP
+`);
 
-      ALTER TABLE tm_task_completions
-      ADD COLUMN IF NOT EXISTS started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+await pool.query(`
+  ALTER TABLE tm_task_completions
+  ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP
+`);
 
-      ALTER TABLE tm_task_completions
-      ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP;
-    `);
+
+/* Fill defaults after columns exist */
+
+await pool.query(`
+  UPDATE tm_tasks
+  SET provider='internal'
+  WHERE provider IS NULL
+`);
+
+await pool.query(`
+  UPDATE tm_tasks
+  SET icon='🎯'
+  WHERE icon IS NULL
+`);
+
+await pool.query(`
+  UPDATE tm_task_completions
+  SET status='completed'
+  WHERE status IS NULL
+`);
+
+
+/* Create default task if no ad task exists */
+
+await pool.query(`
+  INSERT INTO tm_tasks
+  (
+    title,
+    description,
+    reward,
+    task_type,
+    provider,
+    icon
+  )
+  SELECT
+    'Watch & Earn',
+    'Watch an eligible sponsored activity and receive the verified reward.',
+    0.50,
+    'ad',
+    'internal',
+    '🎬'
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM tm_tasks
+    WHERE task_type='ad'
+  )
+`);
 
     /*
       Make sure old completion rows have status.
