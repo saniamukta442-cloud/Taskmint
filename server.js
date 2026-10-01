@@ -14,14 +14,12 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-// =========================
-// REWARD SETTINGS
-// =========================
-
 const AD_REWARD = 0.50;
 const DAILY_BONUS = 1.00;
 const REFERRAL_REWARD = 5.00;
 const MIN_WITHDRAW = 50.00;
+
+const DAILY_AD_LIMIT = 30;
 
 if (!JWT_SECRET) {
   console.warn("WARNING: JWT_SECRET is not set.");
@@ -29,18 +27,18 @@ if (!JWT_SECRET) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl:
-    process.env.NODE_ENV === "production"
-      ? { rejectUnauthorized: false }
-      : false
+  ssl: process.env.NODE_ENV === "production"
+    ? { rejectUnauthorized: false }
+    : false
 });
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// =========================
-// HELPERS
-// =========================
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 function makeReferralCode() {
   return crypto.randomBytes(5).toString("hex").toUpperCase();
@@ -54,8 +52,20 @@ function signToken(user) {
   );
 }
 
+function signAdminToken() {
+  return jwt.sign(
+    {
+      admin: true,
+      email: ADMIN_EMAIL
+    },
+    JWT_SECRET,
+    { expiresIn: "12h" }
+  );
+}
+
 function auth(req, res, next) {
   const header = req.headers.authorization || "";
+
   const token = header.startsWith("Bearer ")
     ? header.slice(7)
     : null;
@@ -76,21 +86,6 @@ function auth(req, res, next) {
       error: "Session expired. Please log in again."
     });
   }
-}
-
-// =========================
-// ADMIN AUTH
-// =========================
-
-function signAdminToken() {
-  return jwt.sign(
-    {
-      admin: true,
-      email: ADMIN_EMAIL
-    },
-    JWT_SECRET,
-    { expiresIn: "12h" }
-  );
 }
 
 function adminAuth(req, res, next) {
@@ -118,7 +113,6 @@ function adminAuth(req, res, next) {
     }
 
     req.admin = decoded;
-
     next();
 
   } catch {
@@ -129,9 +123,10 @@ function adminAuth(req, res, next) {
   }
 }
 
-// =========================
-// HEALTH
-// =========================
+
+/* =========================================================
+   HEALTH
+========================================================= */
 
 app.get("/api/health", async (req, res) => {
   try {
@@ -142,7 +137,10 @@ app.get("/api/health", async (req, res) => {
       service: "TaskMint",
       database: "connected"
     });
-  } catch {
+
+  } catch (e) {
+    console.error("Health error:", e);
+
     res.status(500).json({
       ok: false,
       database: "error"
@@ -150,11 +148,13 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-// =========================
-// REGISTER
-// =========================
+
+/* =========================================================
+   REGISTER
+========================================================= */
 
 app.post("/api/register", async (req, res) => {
+
   const {
     email,
     password,
@@ -169,9 +169,7 @@ app.post("/api/register", async (req, res) => {
     });
   }
 
-  const cleanEmail = String(email)
-    .trim()
-    .toLowerCase();
+  const cleanEmail = String(email).trim().toLowerCase();
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
     return res.status(400).json({
@@ -197,6 +195,7 @@ app.post("/api/register", async (req, res) => {
   const client = await pool.connect();
 
   try {
+
     await client.query("BEGIN");
 
     const exists = await client.query(
@@ -205,6 +204,7 @@ app.post("/api/register", async (req, res) => {
     );
 
     if (exists.rows.length) {
+
       await client.query("ROLLBACK");
 
       return res.status(409).json({
@@ -213,20 +213,16 @@ app.post("/api/register", async (req, res) => {
       });
     }
 
-    // Find referrer
     let referredBy = null;
 
     if (referralCode) {
+
       const ref = await client.query(
         `SELECT id
          FROM tm_users
          WHERE referral_code=$1
          LIMIT 1`,
-        [
-          String(referralCode)
-            .trim()
-            .toUpperCase()
-        ]
+        [String(referralCode).trim().toUpperCase()]
       );
 
       if (ref.rows.length) {
@@ -235,13 +231,14 @@ app.post("/api/register", async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(
-      password,
+      String(password),
       12
     );
 
     let code;
 
     for (let i = 0; i < 10; i++) {
+
       code = makeReferralCode();
 
       const check = await client.query(
@@ -249,12 +246,9 @@ app.post("/api/register", async (req, res) => {
         [code]
       );
 
-      if (!check.rows.length) {
-        break;
-      }
+      if (!check.rows.length) break;
     }
 
-    // New user starts with $0
     const result = await client.query(
       `INSERT INTO tm_users
        (
@@ -284,18 +278,14 @@ app.post("/api/register", async (req, res) => {
 
     const newUser = result.rows[0];
 
-    // ==========================================
-    // REFERRAL REWARD
-    // Referrer gets $5
-    // ==========================================
-
+    /* Referral reward */
     if (referredBy) {
 
       await client.query(
         `UPDATE tm_users
          SET
-           balance = balance + $1,
-           total_earned = total_earned + $1
+           balance=balance+$1,
+           total_earned=total_earned+$1
          WHERE id=$2`,
         [
           REFERRAL_REWARD,
@@ -311,13 +301,7 @@ app.post("/api/register", async (req, res) => {
            amount,
            description
          )
-         VALUES
-         (
-           $1,
-           'referral',
-           $2,
-           $3
-         )`,
+         VALUES($1,'referral',$2,$3)`,
         [
           referredBy,
           REFERRAL_REWARD,
@@ -338,10 +322,7 @@ app.post("/api/register", async (req, res) => {
 
     await client.query("ROLLBACK");
 
-    console.error(
-      "Register error:",
-      e
-    );
+    console.error("Register error:", e);
 
     res.status(500).json({
       ok: false,
@@ -353,9 +334,10 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// =========================
-// LOGIN
-// =========================
+
+/* =========================================================
+   LOGIN
+========================================================= */
 
 app.post("/api/login", async (req, res) => {
 
@@ -375,22 +357,20 @@ app.post("/api/login", async (req, res) => {
 
     const r = await pool.query(
       `SELECT
-        id,
-        email,
-        password_hash,
-        display_name,
-        balance,
-        total_earned,
-        referral_code,
-        status,
-        created_at
+         id,
+         email,
+         password_hash,
+         display_name,
+         balance,
+         total_earned,
+         referral_code,
+         status,
+         created_at
        FROM tm_users
        WHERE email=$1
        LIMIT 1`,
       [
-        String(email)
-          .trim()
-          .toLowerCase()
+        String(email).trim().toLowerCase()
       ]
     );
 
@@ -432,10 +412,7 @@ app.post("/api/login", async (req, res) => {
 
   } catch (e) {
 
-    console.error(
-      "Login error:",
-      e
-    );
+    console.error("Login error:", e);
 
     res.status(500).json({
       ok: false,
@@ -444,9 +421,10 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// =========================
-// CURRENT USER
-// =========================
+
+/* =========================================================
+   CURRENT USER
+========================================================= */
 
 app.get("/api/me", auth, async (req, res) => {
 
@@ -454,13 +432,13 @@ app.get("/api/me", auth, async (req, res) => {
 
     const r = await pool.query(
       `SELECT
-        id,
-        email,
-        display_name,
-        balance,
-        total_earned,
-        referral_code,
-        created_at
+         id,
+         email,
+         display_name,
+         balance,
+         total_earned,
+         referral_code,
+         created_at
        FROM tm_users
        WHERE id=$1`,
       [req.auth.userId]
@@ -480,7 +458,7 @@ app.get("/api/me", auth, async (req, res) => {
 
   } catch (e) {
 
-    console.error(e);
+    console.error("Me error:", e);
 
     res.status(500).json({
       ok: false,
@@ -489,9 +467,708 @@ app.get("/api/me", auth, async (req, res) => {
   }
 });
 
-// =========================
-// ADMIN LOGIN
-// =========================
+
+/* =========================================================
+   ACTIVITY
+========================================================= */
+
+app.get("/api/activity", auth, async (req, res) => {
+
+  try {
+
+    const r = await pool.query(
+      `SELECT
+         id,
+         type,
+         amount,
+         description,
+         created_at
+       FROM tm_transactions
+       WHERE user_id=$1
+       ORDER BY id DESC
+       LIMIT 30`,
+      [req.auth.userId]
+    );
+
+    res.json({
+      ok: true,
+      items: r.rows
+    });
+
+  } catch (e) {
+
+    console.error("Activity error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not load activity."
+    });
+  }
+});
+
+
+/* =========================================================
+   DAILY BONUS
+========================================================= */
+
+app.get("/api/daily-bonus/status", auth, async (req, res) => {
+
+  try {
+
+    const r = await pool.query(
+      `SELECT EXISTS(
+        SELECT 1
+        FROM tm_transactions
+        WHERE user_id=$1
+          AND type='daily_bonus'
+          AND created_at>=CURRENT_DATE
+          AND created_at<CURRENT_DATE+INTERVAL '1 day'
+      ) AS claimed`,
+      [req.auth.userId]
+    );
+
+    res.json({
+      ok: true,
+      claimed: r.rows[0].claimed,
+      reward: DAILY_BONUS
+    });
+
+  } catch (e) {
+
+    console.error("Daily status error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not check daily bonus."
+    });
+  }
+});
+
+
+app.post("/api/daily-bonus", auth, async (req, res) => {
+
+  const client = await pool.connect();
+
+  try {
+
+    await client.query("BEGIN");
+
+    const user = await client.query(
+      `SELECT id,balance
+       FROM tm_users
+       WHERE id=$1
+       FOR UPDATE`,
+      [req.auth.userId]
+    );
+
+    if (!user.rows.length) {
+
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        ok: false,
+        error: "User not found."
+      });
+    }
+
+    const already = await client.query(
+      `SELECT id
+       FROM tm_transactions
+       WHERE user_id=$1
+         AND type='daily_bonus'
+         AND created_at>=CURRENT_DATE
+         AND created_at<CURRENT_DATE+INTERVAL '1 day'
+       LIMIT 1`,
+      [req.auth.userId]
+    );
+
+    if (already.rows.length) {
+
+      await client.query("ROLLBACK");
+
+      return res.status(400).json({
+        ok: false,
+        error: "Daily bonus already claimed today."
+      });
+    }
+
+    await client.query(
+      `UPDATE tm_users
+       SET
+         balance=balance+$1,
+         total_earned=total_earned+$1
+       WHERE id=$2`,
+      [
+        DAILY_BONUS,
+        req.auth.userId
+      ]
+    );
+
+    await client.query(
+      `INSERT INTO tm_transactions
+       (
+         user_id,
+         type,
+         amount,
+         description
+       )
+       VALUES($1,'daily_bonus',$2,'Daily bonus')`,
+      [
+        req.auth.userId,
+        DAILY_BONUS
+      ]
+    );
+
+    const updated = await client.query(
+      `SELECT balance,total_earned
+       FROM tm_users
+       WHERE id=$1`,
+      [req.auth.userId]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      ok: true,
+      message: "Daily bonus claimed successfully.",
+      reward: DAILY_BONUS,
+      balance: updated.rows[0].balance,
+      totalEarned: updated.rows[0].total_earned
+    });
+
+  } catch (e) {
+
+    await client.query("ROLLBACK");
+
+    console.error("Daily bonus error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not claim daily bonus."
+    });
+
+  } finally {
+    client.release();
+  }
+});
+
+
+/* =========================================================
+   ADS
+========================================================= */
+
+app.get("/api/ad-status", auth, async (req, res) => {
+
+  try {
+
+    const r = await pool.query(
+      `SELECT COUNT(*)::int AS count
+       FROM tm_transactions
+       WHERE user_id=$1
+         AND type='ad_reward'
+         AND created_at>=CURRENT_DATE
+         AND created_at<CURRENT_DATE+INTERVAL '1 day'`,
+      [req.auth.userId]
+    );
+
+    const count = Number(
+      r.rows[0].count || 0
+    );
+
+    res.json({
+      ok: true,
+      watched: count,
+      limit: DAILY_AD_LIMIT,
+      remaining: Math.max(
+        0,
+        DAILY_AD_LIMIT - count
+      ),
+      reward: AD_REWARD
+    });
+
+  } catch (e) {
+
+    console.error("Ad status error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not load ad status."
+    });
+  }
+});
+
+
+app.post("/api/ad-reward", auth, async (req, res) => {
+
+  const provider = String(
+    req.body?.provider || ""
+  ).toLowerCase();
+
+  if (!["monetag", "gigapub"].includes(provider)) {
+    return res.status(400).json({
+      ok: false,
+      error: "Invalid ad provider."
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+
+    await client.query("BEGIN");
+
+    const user = await client.query(
+      `SELECT id,balance,total_earned
+       FROM tm_users
+       WHERE id=$1
+       FOR UPDATE`,
+      [req.auth.userId]
+    );
+
+    if (!user.rows.length) {
+
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        ok: false,
+        error: "User not found."
+      });
+    }
+
+    const countResult = await client.query(
+      `SELECT COUNT(*)::int AS count
+       FROM tm_transactions
+       WHERE user_id=$1
+         AND type='ad_reward'
+         AND created_at>=CURRENT_DATE
+         AND created_at<CURRENT_DATE+INTERVAL '1 day'`,
+      [req.auth.userId]
+    );
+
+    const todayCount = Number(
+      countResult.rows[0].count || 0
+    );
+
+    if (todayCount >= DAILY_AD_LIMIT) {
+
+      await client.query("ROLLBACK");
+
+      return res.status(400).json({
+        ok: false,
+        error:
+          `Daily ad limit reached. Maximum ${DAILY_AD_LIMIT} ads per day.`
+      });
+    }
+
+    await client.query(
+      `UPDATE tm_users
+       SET
+         balance=balance+$1,
+         total_earned=total_earned+$1
+       WHERE id=$2`,
+      [
+        AD_REWARD,
+        req.auth.userId
+      ]
+    );
+
+    await client.query(
+      `INSERT INTO tm_transactions
+       (
+         user_id,
+         type,
+         amount,
+         description
+       )
+       VALUES($1,'ad_reward',$2,$3)`,
+      [
+        req.auth.userId,
+        AD_REWARD,
+        `${provider === "monetag"
+          ? "Monetag"
+          : "GigaPub"} ad reward`
+      ]
+    );
+
+    const updated = await client.query(
+      `SELECT balance,total_earned
+       FROM tm_users
+       WHERE id=$1`,
+      [req.auth.userId]
+    );
+
+    await client.query("COMMIT");
+
+    const newCount = todayCount + 1;
+
+    res.json({
+      ok: true,
+      provider,
+      reward: AD_REWARD,
+      watched: newCount,
+      limit: DAILY_AD_LIMIT,
+      remaining: Math.max(
+        0,
+        DAILY_AD_LIMIT - newCount
+      ),
+      balance: updated.rows[0].balance,
+      totalEarned: updated.rows[0].total_earned,
+      message: `+$${AD_REWARD.toFixed(2)} added.`
+    });
+
+  } catch (e) {
+
+    await client.query("ROLLBACK");
+
+    console.error("Ad reward error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not add ad reward."
+    });
+
+  } finally {
+    client.release();
+  }
+});
+
+
+/* =========================================================
+   TASKS
+========================================================= */
+
+/*
+  Public task list.
+  Only active tasks are shown.
+*/
+
+app.get("/api/tasks", auth, async (req, res) => {
+
+  try {
+
+    const r = await pool.query(
+      `SELECT
+         id,
+         title,
+         description,
+         reward,
+         task_type,
+         provider,
+         provider_task_id,
+         icon,
+         daily_limit,
+         created_at
+       FROM tm_tasks
+       WHERE active=true
+       ORDER BY id DESC`
+    );
+
+    res.json({
+      ok: true,
+      tasks: r.rows
+    });
+
+  } catch (e) {
+
+    console.error("Tasks error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not load tasks."
+    });
+  }
+});
+
+
+/*
+  Single task details
+*/
+
+app.get("/api/tasks/:id", auth, async (req, res) => {
+
+  const taskId = Number(req.params.id);
+
+  if (!Number.isInteger(taskId)) {
+    return res.status(400).json({
+      ok: false,
+      error: "Invalid task ID."
+    });
+  }
+
+  try {
+
+    const r = await pool.query(
+      `SELECT
+         id,
+         title,
+         description,
+         reward,
+         task_type,
+         provider,
+         provider_task_id,
+         icon,
+         daily_limit,
+         created_at
+       FROM tm_tasks
+       WHERE id=$1
+         AND active=true
+       LIMIT 1`,
+      [taskId]
+    );
+
+    if (!r.rows.length) {
+      return res.status(404).json({
+        ok: false,
+        error: "Task not found."
+      });
+    }
+
+    res.json({
+      ok: true,
+      task: r.rows[0]
+    });
+
+  } catch (e) {
+
+    console.error("Task details error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not load task."
+    });
+  }
+});
+
+
+/*
+  Start a task.
+
+  IMPORTANT:
+  Starting a task does NOT give money.
+  It creates a pending completion.
+*/
+
+app.post("/api/tasks/:id/start", auth, async (req, res) => {
+
+  const taskId = Number(req.params.id);
+
+  if (!Number.isInteger(taskId)) {
+    return res.status(400).json({
+      ok: false,
+      error: "Invalid task ID."
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+
+    await client.query("BEGIN");
+
+    const taskResult = await client.query(
+      `SELECT
+         id,
+         title,
+         reward,
+         task_type,
+         provider,
+         provider_task_id,
+         daily_limit
+       FROM tm_tasks
+       WHERE id=$1
+         AND active=true
+       FOR UPDATE`,
+      [taskId]
+    );
+
+    if (!taskResult.rows.length) {
+
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        ok: false,
+        error: "Task is not available."
+      });
+    }
+
+    const task = taskResult.rows[0];
+
+    /*
+      Prevent a user from repeatedly starting
+      the same task while an earlier completion exists.
+    */
+
+    const existing = await client.query(
+      `SELECT
+         id,
+         status,
+         reward,
+         started_at,
+         completed_at
+       FROM tm_task_completions
+       WHERE user_id=$1
+         AND task_id=$2
+       ORDER BY id DESC
+       LIMIT 1`,
+      [
+        req.auth.userId,
+        taskId
+      ]
+    );
+
+    if (existing.rows.length) {
+
+      const previous = existing.rows[0];
+
+      if (
+        previous.status === "pending" ||
+        previous.status === "completed"
+      ) {
+
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          ok: false,
+          error:
+            previous.status === "completed"
+              ? "You have already completed this task."
+              : "You already started this task. It is waiting for verification.",
+          completion: previous
+        });
+      }
+    }
+
+    /*
+      Optional daily task limit.
+    */
+
+    if (task.daily_limit) {
+
+      const today = await client.query(
+        `SELECT COUNT(*)::int AS count
+         FROM tm_task_completions
+         WHERE task_id=$1
+           AND created_at>=CURRENT_DATE
+           AND created_at<CURRENT_DATE+INTERVAL '1 day'`,
+        [taskId]
+      );
+
+      const used = Number(
+        today.rows[0].count || 0
+      );
+
+      if (used >= Number(task.daily_limit)) {
+
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          ok: false,
+          error: "This task has reached its daily limit."
+        });
+      }
+    }
+
+    const completion = await client.query(
+      `INSERT INTO tm_task_completions
+       (
+         user_id,
+         task_id,
+         reward,
+         status,
+         started_at
+       )
+       VALUES($1,$2,$3,'pending',CURRENT_TIMESTAMP)
+       RETURNING
+         id,
+         task_id,
+         reward,
+         status,
+         started_at`,
+      [
+        req.auth.userId,
+        taskId,
+        task.reward
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      ok: true,
+      message:
+        "Task started. Complete the activity and wait for verification.",
+      task,
+      completion: completion.rows[0]
+    });
+
+  } catch (e) {
+
+    await client.query("ROLLBACK");
+
+    console.error("Start task error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not start task."
+    });
+
+  } finally {
+    client.release();
+  }
+});
+
+
+/*
+  Current user's task history
+*/
+
+app.get("/api/my-tasks", auth, async (req, res) => {
+
+  try {
+
+    const r = await pool.query(
+      `SELECT
+         c.id,
+         c.task_id,
+         c.reward,
+         c.status,
+         c.provider_reference,
+         c.started_at,
+         c.completed_at,
+         c.created_at,
+         t.title,
+         t.description,
+         t.task_type,
+         t.icon
+       FROM tm_task_completions c
+       JOIN tm_tasks t
+         ON t.id=c.task_id
+       WHERE c.user_id=$1
+       ORDER BY c.id DESC
+       LIMIT 50`,
+      [req.auth.userId]
+    );
+
+    res.json({
+      ok: true,
+      items: r.rows
+    });
+
+  } catch (e) {
+
+    console.error("My tasks error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not load your tasks."
+    });
+  }
+});
+
+
+/* =========================================================
+   ADMIN LOGIN
+========================================================= */
 
 app.post("/api/admin/login", async (req, res) => {
 
@@ -533,669 +1210,470 @@ app.post("/api/admin/login", async (req, res) => {
   });
 });
 
-// =========================
-// ACTIVITY
-// =========================
 
-app.get("/api/activity", auth, async (req, res) => {
+/* =========================================================
+   ADMIN TASK MANAGEMENT
+========================================================= */
+
+
+/*
+  Get all tasks for admin
+*/
+
+app.get("/api/admin/tasks", adminAuth, async (req, res) => {
 
   try {
 
     const r = await pool.query(
       `SELECT
-        id,
-        type,
-        amount,
-        description,
-        created_at
-       FROM tm_transactions
-       WHERE user_id=$1
-       ORDER BY id DESC
-       LIMIT 30`,
-      [req.auth.userId]
+         id,
+         title,
+         description,
+         reward,
+         task_type,
+         provider,
+         provider_task_id,
+         icon,
+         active,
+         daily_limit,
+         created_at
+       FROM tm_tasks
+       ORDER BY id DESC`
     );
 
     res.json({
       ok: true,
-      items: r.rows
+      tasks: r.rows
     });
 
   } catch (e) {
 
+    console.error("Admin tasks error:", e);
+
     res.status(500).json({
       ok: false,
-      error: "Could not load activity."
+      error: "Could not load admin tasks."
     });
   }
 });
 
-// =========================
-// DAILY BONUS STATUS
-// =========================
 
-app.get(
-  "/api/daily-bonus/status",
-  auth,
-  async (req, res) => {
+/*
+  Create new task
+*/
 
-    try {
+app.post("/api/admin/tasks", adminAuth, async (req, res) => {
 
-      const r = await pool.query(
-        `SELECT EXISTS(
-          SELECT 1
-          FROM tm_transactions
-          WHERE user_id=$1
-            AND type='daily_bonus'
-            AND created_at >= CURRENT_DATE
-            AND created_at < CURRENT_DATE + INTERVAL '1 day'
-        ) AS claimed`,
-        [req.auth.userId]
-      );
+  const {
+    title,
+    description,
+    reward,
+    taskType,
+    provider,
+    providerTaskId,
+    icon,
+    dailyLimit,
+    active
+  } = req.body || {};
 
-      res.json({
-        ok: true,
-        claimed: r.rows[0].claimed,
-        reward: DAILY_BONUS
-      });
+  const cleanTitle = String(
+    title || ""
+  ).trim();
 
-    } catch (e) {
+  const cleanDescription = String(
+    description || ""
+  ).trim();
 
-      console.error(
-        "Daily status error:",
-        e
-      );
+  const rewardValue = Number(reward);
 
-      res.status(500).json({
-        ok: false,
-        error: "Could not check daily bonus."
-      });
-    }
+  const cleanType = String(
+    taskType || "task"
+  ).trim().toLowerCase();
+
+  const cleanProvider = String(
+    provider || "internal"
+  ).trim();
+
+  const cleanProviderTaskId = String(
+    providerTaskId || ""
+  ).trim() || null;
+
+  const cleanIcon = String(
+    icon || "🎯"
+  ).trim();
+
+  const limitValue =
+    dailyLimit === null ||
+    dailyLimit === undefined ||
+    dailyLimit === ""
+      ? null
+      : Number(dailyLimit);
+
+  if (!cleanTitle) {
+    return res.status(400).json({
+      ok: false,
+      error: "Task title is required."
+    });
   }
-);
 
-// =========================
-// CLAIM DAILY BONUS
-// =========================
-
-app.post(
-  "/api/daily-bonus",
-  auth,
-  async (req, res) => {
-
-    const client = await pool.connect();
-
-    try {
-
-      await client.query("BEGIN");
-
-      // Lock user row so double-click / parallel requests
-      // cannot claim twice.
-      const user = await client.query(
-        `SELECT id,balance
-         FROM tm_users
-         WHERE id=$1
-         FOR UPDATE`,
-        [req.auth.userId]
-      );
-
-      if (!user.rows.length) {
-        await client.query("ROLLBACK");
-
-        return res.status(404).json({
-          ok: false,
-          error: "User not found."
-        });
-      }
-
-      const already = await client.query(
-        `SELECT id
-         FROM tm_transactions
-         WHERE user_id=$1
-           AND type='daily_bonus'
-           AND created_at >= CURRENT_DATE
-           AND created_at < CURRENT_DATE + INTERVAL '1 day'
-         LIMIT 1`,
-        [req.auth.userId]
-      );
-
-      if (already.rows.length) {
-
-        await client.query("ROLLBACK");
-
-        return res.status(400).json({
-          ok: false,
-          error: "Daily bonus already claimed today."
-        });
-      }
-
-      // Add $1
-      await client.query(
-        `UPDATE tm_users
-         SET
-           balance = balance + $1,
-           total_earned = total_earned + $1
-         WHERE id=$2`,
-        [
-          DAILY_BONUS,
-          req.auth.userId
-        ]
-      );
-
-      await client.query(
-        `INSERT INTO tm_transactions
-         (
-           user_id,
-           type,
-           amount,
-           description
-         )
-         VALUES
-         (
-           $1,
-           'daily_bonus',
-           $2,
-           'Daily bonus'
-         )`,
-        [
-          req.auth.userId,
-          DAILY_BONUS
-        ]
-      );
-
-      const updated = await client.query(
-        `SELECT balance,total_earned
-         FROM tm_users
-         WHERE id=$1`,
-        [req.auth.userId]
-      );
-
-      await client.query("COMMIT");
-
-      res.json({
-        ok: true,
-        message: "Daily bonus claimed successfully.",
-        reward: DAILY_BONUS,
-        balance: updated.rows[0].balance,
-        totalEarned: updated.rows[0].total_earned
-      });
-
-    } catch (e) {
-
-      await client.query("ROLLBACK");
-
-      console.error(
-        "Daily bonus error:",
-        e
-      );
-
-      res.status(500).json({
-        ok: false,
-        error: "Could not claim daily bonus."
-      });
-
-    } finally {
-      client.release();
-    }
+  if (
+    !Number.isFinite(rewardValue) ||
+    rewardValue <= 0
+  ) {
+    return res.status(400).json({
+      ok: false,
+      error: "Reward must be greater than 0."
+    });
   }
-);
 
-// =====================================================
-// VERIFIED AD REWARD
-// =====================================================
-//
-// IMPORTANT:
-// Do NOT make this endpoint publicly callable from a
-// normal frontend button.
-//
-// The $0.50 reward should be called only after your
-// advertising provider confirms a valid ad completion.
-//
-// Provider-specific callback/security will be connected
-// here after we know which ad network you are using.
-//
-// =====================================================
-
-// =========================
-// WATCH & EARN
-// MONETAG + GIGAPUB
-// =========================
-
-const DAILY_AD_LIMIT = 30;
-
-app.get(
-  "/api/ad-status",
-  auth,
-  async (req, res) => {
-
-    try {
-
-      const r = await pool.query(
-        `SELECT COUNT(*)::int AS count
-         FROM tm_transactions
-         WHERE user_id=$1
-           AND type='ad_reward'
-           AND created_at >= CURRENT_DATE
-           AND created_at < CURRENT_DATE + INTERVAL '1 day'`,
-        [req.auth.userId]
-      );
-
-      const count = Number(r.rows[0].count || 0);
-
-      res.json({
-        ok: true,
-        watched: count,
-        limit: DAILY_AD_LIMIT,
-        remaining: Math.max(
-          0,
-          DAILY_AD_LIMIT - count
-        ),
-        reward: AD_REWARD
-      });
-
-    } catch (e) {
-
-      console.error(
-        "Ad status error:",
-        e
-      );
-
-      res.status(500).json({
-        ok: false,
-        error: "Could not load ad status."
-      });
-    }
+  if (
+    limitValue !== null &&
+    (
+      !Number.isInteger(limitValue) ||
+      limitValue <= 0
+    )
+  ) {
+    return res.status(400).json({
+      ok: false,
+      error: "Daily limit must be a positive integer."
+    });
   }
-);
+
+  try {
+
+    const r = await pool.query(
+      `INSERT INTO tm_tasks
+       (
+         title,
+         description,
+         reward,
+         task_type,
+         provider,
+         provider_task_id,
+         icon,
+         daily_limit,
+         active
+       )
+       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       RETURNING *`,
+      [
+        cleanTitle,
+        cleanDescription || null,
+        rewardValue,
+        cleanType,
+        cleanProvider,
+        cleanProviderTaskId,
+        cleanIcon,
+        limitValue,
+        active !== false
+      ]
+    );
+
+    res.status(201).json({
+      ok: true,
+      message: "Task created successfully.",
+      task: r.rows[0]
+    });
+
+  } catch (e) {
+
+    console.error("Create task error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not create task."
+    });
+  }
+});
 
 
-// =========================
-// CREDIT VERIFIED AD
-// =========================
+/*
+  Update task
+*/
 
-app.post(
-  "/api/ad-reward",
-  auth,
-  async (req, res) => {
+app.patch("/api/admin/tasks/:id", adminAuth, async (req, res) => {
 
-    const provider =
-      String(
-        req.body?.provider || ""
-      ).toLowerCase();
+  const taskId = Number(req.params.id);
 
-    if (
-      !["monetag", "gigapub"]
-        .includes(provider)
-    ) {
+  if (!Number.isInteger(taskId)) {
+    return res.status(400).json({
+      ok: false,
+      error: "Invalid task ID."
+    });
+  }
 
-      return res.status(400).json({
+  const {
+    title,
+    description,
+    reward,
+    taskType,
+    provider,
+    providerTaskId,
+    icon,
+    dailyLimit,
+    active
+  } = req.body || {};
+
+  try {
+
+    const existing = await pool.query(
+      `SELECT *
+       FROM tm_tasks
+       WHERE id=$1`,
+      [taskId]
+    );
+
+    if (!existing.rows.length) {
+      return res.status(404).json({
         ok: false,
-        error:
-          "Invalid ad provider."
+        error: "Task not found."
       });
     }
 
-    const client =
-      await pool.connect();
+    const old = existing.rows[0];
 
-    try {
+    const newTitle =
+      title !== undefined
+        ? String(title).trim()
+        : old.title;
 
-      await client.query(
-        "BEGIN"
-      );
+    const newDescription =
+      description !== undefined
+        ? String(description).trim()
+        : old.description;
 
-      // Lock this user
-      const user =
-        await client.query(
-          `SELECT id,balance,total_earned
-           FROM tm_users
-           WHERE id=$1
-           FOR UPDATE`,
-          [req.auth.userId]
-        );
+    const newReward =
+      reward !== undefined
+        ? Number(reward)
+        : Number(old.reward);
 
-      if (!user.rows.length) {
+    const newType =
+      taskType !== undefined
+        ? String(taskType).trim().toLowerCase()
+        : old.task_type;
 
-        await client.query(
-          "ROLLBACK"
-        );
+    const newProvider =
+      provider !== undefined
+        ? String(provider).trim()
+        : old.provider;
 
-        return res.status(404).json({
-          ok: false,
-          error:
-            "User not found."
-        });
-      }
+    const newProviderTaskId =
+      providerTaskId !== undefined
+        ? (
+            String(providerTaskId).trim() || null
+          )
+        : old.provider_task_id;
 
+    const newIcon =
+      icon !== undefined
+        ? String(icon).trim()
+        : old.icon;
 
-      // Count today's rewarded ads
-      const countResult =
-        await client.query(
-          `SELECT COUNT(*)::int AS count
-           FROM tm_transactions
-           WHERE user_id=$1
-             AND type='ad_reward'
-             AND created_at >= CURRENT_DATE
-             AND created_at < CURRENT_DATE + INTERVAL '1 day'`,
-          [req.auth.userId]
-        );
+    let newDailyLimit = old.daily_limit;
 
-      const todayCount =
-        Number(
-          countResult.rows[0].count || 0
-        );
+    if (dailyLimit !== undefined) {
 
+      newDailyLimit =
+        dailyLimit === null ||
+        dailyLimit === ""
+          ? null
+          : Number(dailyLimit);
 
-      // Daily limit
       if (
-        todayCount >=
-        DAILY_AD_LIMIT
-      ) {
-
-        await client.query(
-          "ROLLBACK"
-        );
-
-        return res.status(400).json({
-          ok: false,
-          error:
-            `Daily ad limit reached. Maximum ${DAILY_AD_LIMIT} ads per day.`
-        });
-      }
-
-
-      // Add $0.50
-      await client.query(
-        `UPDATE tm_users
-         SET
-           balance = balance + $1,
-           total_earned = total_earned + $1
-         WHERE id=$2`,
-        [
-          AD_REWARD,
-          req.auth.userId
-        ]
-      );
-
-
-      // Activity
-      await client.query(
-        `INSERT INTO tm_transactions
-         (
-           user_id,
-           type,
-           amount,
-           description
-         )
-         VALUES
-         (
-           $1,
-           'ad_reward',
-           $2,
-           $3
-         )`,
-        [
-          req.auth.userId,
-          AD_REWARD,
-          `${provider === "monetag"
-            ? "Monetag"
-            : "GigaPub"} ad reward`
-        ]
-      );
-
-
-      const updated =
-        await client.query(
-          `SELECT
-             balance,
-             total_earned
-           FROM tm_users
-           WHERE id=$1`,
-          [req.auth.userId]
-        );
-
-
-      await client.query(
-        "COMMIT"
-      );
-
-
-      const newCount =
-        todayCount + 1;
-
-
-      res.json({
-        ok: true,
-
-        provider,
-
-        reward: AD_REWARD,
-
-        watched:
-          newCount,
-
-        limit:
-          DAILY_AD_LIMIT,
-
-        remaining:
-          Math.max(
-            0,
-            DAILY_AD_LIMIT -
-            newCount
-          ),
-
-        balance:
-          updated.rows[0].balance,
-
-        totalEarned:
-          updated.rows[0].total_earned,
-
-        message:
-          `+$${AD_REWARD.toFixed(2)} added.`
-      });
-
-
-    } catch (e) {
-
-      await client.query(
-        "ROLLBACK"
-      );
-
-      console.error(
-        "Ad reward error:",
-        e
-      );
-
-      res.status(500).json({
-        ok: false,
-        error:
-          "Could not add ad reward."
-      });
-
-    } finally {
-
-      client.release();
-    }
-  }
-);
-
-// =========================
-// WITHDRAW
-// =========================
-
-app.post(
-  "/api/withdrawals",
-  auth,
-  async (req, res) => {
-
-    const {
-      amount,
-      method,
-      accountNumber,
-      accountName
-    } = req.body || {};
-
-    const value = Number(amount);
-
-    if (
-      !Number.isFinite(value) ||
-      value < MIN_WITHDRAW
-    ) {
-      return res.status(400).json({
-        ok: false,
-        error:
-          `Minimum withdrawal is $${MIN_WITHDRAW.toFixed(2)}.`
-      });
-    }
-
-    if (
-      !["bkash", "nagad"]
-        .includes(
-          String(method).toLowerCase()
+        newDailyLimit !== null &&
+        (
+          !Number.isInteger(newDailyLimit) ||
+          newDailyLimit <= 0
         )
-    ) {
+      ) {
+        return res.status(400).json({
+          ok: false,
+          error: "Invalid daily limit."
+        });
+      }
+    }
+
+    const newActive =
+      active !== undefined
+        ? Boolean(active)
+        : old.active;
+
+    if (!newTitle) {
       return res.status(400).json({
         ok: false,
-        error:
-          "Select bKash or Nagad."
+        error: "Task title is required."
       });
     }
 
     if (
-      !/^[0-9]{11}$/.test(
-        String(accountNumber || "")
-      )
+      !Number.isFinite(newReward) ||
+      newReward <= 0
     ) {
       return res.status(400).json({
         ok: false,
-        error:
-          "Enter a valid 11-digit account number."
+        error: "Reward must be greater than 0."
       });
     }
 
-    const client = await pool.connect();
+    const r = await pool.query(
+      `UPDATE tm_tasks
+       SET
+         title=$1,
+         description=$2,
+         reward=$3,
+         task_type=$4,
+         provider=$5,
+         provider_task_id=$6,
+         icon=$7,
+         daily_limit=$8,
+         active=$9
+       WHERE id=$10
+       RETURNING *`,
+      [
+        newTitle,
+        newDescription || null,
+        newReward,
+        newType,
+        newProvider,
+        newProviderTaskId,
+        newIcon,
+        newDailyLimit,
+        newActive,
+        taskId
+      ]
+    );
 
-    try {
+    res.json({
+      ok: true,
+      message: "Task updated successfully.",
+      task: r.rows[0]
+    });
 
-      await client.query("BEGIN");
+  } catch (e) {
 
-      const u = await client.query(
-        `SELECT id,balance
-         FROM tm_users
-         WHERE id=$1
-         FOR UPDATE`,
-        [req.auth.userId]
-      );
+    console.error("Update task error:", e);
 
-      if (!u.rows.length) {
-        await client.query("ROLLBACK");
-
-        return res.status(404).json({
-          ok: false,
-          error: "User not found."
-        });
-      }
-
-      if (
-        Number(u.rows[0].balance) < value
-      ) {
-        await client.query("ROLLBACK");
-
-        return res.status(400).json({
-          ok: false,
-          error: "Insufficient balance."
-        });
-      }
-
-      await client.query(
-        `INSERT INTO tm_withdrawals
-         (
-           user_id,
-           amount,
-           method,
-           account_number,
-           account_name
-         )
-         VALUES($1,$2,$3,$4,$5)`,
-        [
-          req.auth.userId,
-          value,
-          String(method).toLowerCase(),
-          String(accountNumber),
-          String(accountName || "").trim()
-        ]
-      );
-
-      await client.query(
-        `UPDATE tm_users
-         SET balance=balance-$1
-         WHERE id=$2`,
-        [
-          value,
-          req.auth.userId
-        ]
-      );
-
-      await client.query(
-        `INSERT INTO tm_transactions
-         (
-           user_id,
-           type,
-           amount,
-           description
-         )
-         VALUES
-         (
-           $1,
-           'withdrawal',
-           $2,
-           $3
-         )`,
-        [
-          req.auth.userId,
-          -value,
-          `Withdrawal request via ${String(method).toLowerCase()}`
-        ]
-      );
-
-      await client.query("COMMIT");
-
-      res.json({
-        ok: true,
-        message:
-          "Withdrawal request submitted."
-      });
-
-    } catch (e) {
-
-      await client.query("ROLLBACK");
-
-      console.error(
-        "Withdrawal error:",
-        e
-      );
-
-      res.status(500).json({
-        ok: false,
-        error:
-          "Could not submit withdrawal."
-      });
-
-    } finally {
-      client.release();
-    }
+    res.status(500).json({
+      ok: false,
+      error: "Could not update task."
+    });
   }
-);
+});
 
-// =====================================================
-// ADMIN - WITHDRAWAL MANAGEMENT
-// =====================================================
 
-// =========================
-// GET PENDING WITHDRAWALS
-// =========================
+/*
+  Delete task
+*/
+
+app.delete("/api/admin/tasks/:id", adminAuth, async (req, res) => {
+
+  const taskId = Number(req.params.id);
+
+  if (!Number.isInteger(taskId)) {
+    return res.status(400).json({
+      ok: false,
+      error: "Invalid task ID."
+    });
+  }
+
+  try {
+
+    const r = await pool.query(
+      `DELETE FROM tm_tasks
+       WHERE id=$1
+       RETURNING id`,
+      [taskId]
+    );
+
+    if (!r.rows.length) {
+      return res.status(404).json({
+        ok: false,
+        error: "Task not found."
+      });
+    }
+
+    res.json({
+      ok: true,
+      message: "Task deleted successfully."
+    });
+
+  } catch (e) {
+
+    console.error("Delete task error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not delete task."
+    });
+  }
+});
+
+
+/*
+  Activate / deactivate task
+*/
+
+app.patch("/api/admin/tasks/:id/status", adminAuth, async (req, res) => {
+
+  const taskId = Number(req.params.id);
+
+  const active =
+    req.body?.active === true;
+
+  if (!Number.isInteger(taskId)) {
+    return res.status(400).json({
+      ok: false,
+      error: "Invalid task ID."
+    });
+  }
+
+  try {
+
+    const r = await pool.query(
+      `UPDATE tm_tasks
+       SET active=$1
+       WHERE id=$2
+       RETURNING id,title,active`,
+      [
+        active,
+        taskId
+      ]
+    );
+
+    if (!r.rows.length) {
+      return res.status(404).json({
+        ok: false,
+        error: "Task not found."
+      });
+    }
+
+    res.json({
+      ok: true,
+      task: r.rows[0]
+    });
+
+  } catch (e) {
+
+    console.error("Task status error:", e);
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not update task status."
+    });
+  }
+});
+
+
+/* =========================================================
+   ADMIN TASK COMPLETIONS
+========================================================= */
+
+/*
+  Admin can see pending task completions.
+*/
 
 app.get(
-  "/api/admin/withdrawals",
+  "/api/admin/task-completions",
   adminAuth,
   async (req, res) => {
 
@@ -1203,21 +1681,25 @@ app.get(
 
       const r = await pool.query(
         `SELECT
-          w.id,
-          w.user_id,
-          w.amount,
-          w.method,
-          w.account_number,
-          w.account_name,
-          w.status,
-          w.created_at,
-          u.display_name,
-          u.email,
-          u.balance
-         FROM tm_withdrawals w
+           c.id,
+           c.user_id,
+           c.task_id,
+           c.reward,
+           c.status,
+           c.provider_reference,
+           c.started_at,
+           c.completed_at,
+           c.created_at,
+           u.display_name,
+           u.email,
+           t.title,
+           t.task_type
+         FROM tm_task_completions c
          JOIN tm_users u
-           ON u.id = w.user_id
-         ORDER BY w.id DESC
+           ON u.id=c.user_id
+         JOIN tm_tasks t
+           ON t.id=c.task_id
+         ORDER BY c.id DESC
          LIMIT 200`
       );
 
@@ -1229,203 +1711,105 @@ app.get(
     } catch (e) {
 
       console.error(
-        "Admin withdrawals error:",
+        "Admin task completions error:",
         e
       );
 
       res.status(500).json({
         ok: false,
-        error: "Could not load withdrawals."
+        error: "Could not load task completions."
       });
     }
   }
 );
 
 
-// =========================
-// APPROVE WITHDRAWAL
-// =========================
+/*
+  Admin verifies a task.
+
+  THIS is where the reward is actually credited.
+*/
 
 app.post(
-  "/api/admin/withdrawals/:id/approve",
+  "/api/admin/task-completions/:id/approve",
   adminAuth,
   async (req, res) => {
 
-    const withdrawalId =
+    const completionId =
       Number(req.params.id);
 
-    if (!Number.isInteger(withdrawalId)) {
+    if (!Number.isInteger(completionId)) {
       return res.status(400).json({
         ok: false,
-        error: "Invalid withdrawal ID."
+        error: "Invalid completion ID."
       });
     }
 
-    const client =
-      await pool.connect();
+    const client = await pool.connect();
 
     try {
 
       await client.query("BEGIN");
 
-      const r = await client.query(
+      const c = await client.query(
         `SELECT
-          id,
-          user_id,
-          amount,
-          status
-         FROM tm_withdrawals
-         WHERE id=$1
+           c.id,
+           c.user_id,
+           c.task_id,
+           c.reward,
+           c.status,
+           t.title
+         FROM tm_task_completions c
+         JOIN tm_tasks t
+           ON t.id=c.task_id
+         WHERE c.id=$1
          FOR UPDATE`,
-        [withdrawalId]
+        [completionId]
       );
 
-      if (!r.rows.length) {
+      if (!c.rows.length) {
 
         await client.query("ROLLBACK");
 
         return res.status(404).json({
           ok: false,
-          error: "Withdrawal not found."
+          error: "Task completion not found."
         });
       }
 
-      const withdrawal = r.rows[0];
+      const completion = c.rows[0];
 
-      if (withdrawal.status !== "pending") {
+      if (completion.status !== "pending") {
 
         await client.query("ROLLBACK");
 
         return res.status(400).json({
           ok: false,
           error:
-            `Withdrawal is already ${withdrawal.status}.`
+            `Completion is already ${completion.status}.`
         });
       }
 
-      await client.query(
-        `UPDATE tm_withdrawals
-         SET
-           status='approved',
-           processed_at=CURRENT_TIMESTAMP
-         WHERE id=$1`,
-        [withdrawalId]
-      );
+      /*
+        Credit user balance
+      */
 
-      await client.query("COMMIT");
-
-      res.json({
-        ok: true,
-        message: "Withdrawal approved successfully."
-      });
-
-    } catch (e) {
-
-      await client.query("ROLLBACK");
-
-      console.error(
-        "Approve withdrawal error:",
-        e
-      );
-
-      res.status(500).json({
-        ok: false,
-        error: "Could not approve withdrawal."
-      });
-
-    } finally {
-
-      client.release();
-    }
-  }
-);
-
-
-// =========================
-// REJECT WITHDRAWAL
-// REFUND USER BALANCE
-// =========================
-
-app.post(
-  "/api/admin/withdrawals/:id/reject",
-  adminAuth,
-  async (req, res) => {
-
-    const withdrawalId =
-      Number(req.params.id);
-
-    if (!Number.isInteger(withdrawalId)) {
-      return res.status(400).json({
-        ok: false,
-        error: "Invalid withdrawal ID."
-      });
-    }
-
-    const client =
-      await pool.connect();
-
-    try {
-
-      await client.query("BEGIN");
-
-      const r = await client.query(
-        `SELECT
-          id,
-          user_id,
-          amount,
-          status,
-          method
-         FROM tm_withdrawals
-         WHERE id=$1
-         FOR UPDATE`,
-        [withdrawalId]
-      );
-
-      if (!r.rows.length) {
-
-        await client.query("ROLLBACK");
-
-        return res.status(404).json({
-          ok: false,
-          error: "Withdrawal not found."
-        });
-      }
-
-      const withdrawal = r.rows[0];
-
-      if (withdrawal.status !== "pending") {
-
-        await client.query("ROLLBACK");
-
-        return res.status(400).json({
-          ok: false,
-          error:
-            `Withdrawal is already ${withdrawal.status}.`
-        });
-      }
-
-      // Return money to user
       await client.query(
         `UPDATE tm_users
-         SET balance = balance + $1
+         SET
+           balance=balance+$1,
+           total_earned=total_earned+$1
          WHERE id=$2`,
         [
-          withdrawal.amount,
-          withdrawal.user_id
+          completion.reward,
+          completion.user_id
         ]
       );
 
-      // Mark withdrawal rejected
-      await client.query(
-        `UPDATE tm_withdrawals
-         SET
-           status='rejected',
-           processed_at=CURRENT_TIMESTAMP
-         WHERE id=$1`,
-        [withdrawalId]
-      );
+      /*
+        Transaction record
+      */
 
-      // Activity record
       await client.query(
         `INSERT INTO tm_transactions
          (
@@ -1434,26 +1818,42 @@ app.post(
            amount,
            description
          )
-         VALUES
-         (
-           $1,
-           'withdrawal_refund',
-           $2,
-           $3
-         )`,
+         VALUES($1,'task_reward',$2,$3)`,
         [
-          withdrawal.user_id,
-          withdrawal.amount,
-          `Withdrawal rejected - ${withdrawal.method}`
+          completion.user_id,
+          completion.reward,
+          `Completed task: ${completion.title}`
         ]
+      );
+
+      /*
+        Mark completion
+      */
+
+      await client.query(
+        `UPDATE tm_task_completions
+         SET
+           status='completed',
+           completed_at=CURRENT_TIMESTAMP
+         WHERE id=$1`,
+        [completionId]
+      );
+
+      const user = await client.query(
+        `SELECT balance,total_earned
+         FROM tm_users
+         WHERE id=$1`,
+        [completion.user_id]
       );
 
       await client.query("COMMIT");
 
       res.json({
         ok: true,
-        message:
-          "Withdrawal rejected and balance refunded."
+        message: "Task approved and reward credited.",
+        reward: completion.reward,
+        balance: user.rows[0].balance,
+        totalEarned: user.rows[0].total_earned
       });
 
     } catch (e) {
@@ -1461,87 +1861,9 @@ app.post(
       await client.query("ROLLBACK");
 
       console.error(
-        "Reject withdrawal error:",
+        "Approve task error:",
         e
       );
 
       res.status(500).json({
-        ok: false,
-        error:
-          "Could not reject withdrawal."
-      });
-
-    } finally {
-
-      client.release();
-    }
-  }
-);
-
-// =========================
-// FRONTEND
-// =========================
-
-app.get("*", (req, res) => {
-  res.sendFile(
-    path.join(
-      __dirname,
-      "public",
-      "index.html"
-    )
-  );
-});
-
-// =========================
-// START
-// =========================
-
-async function init() {
-
-  try {
-
-    const schema = fs.readFileSync(
-      path.join(
-        __dirname,
-        "schema.sql"
-      ),
-      "utf8"
-    );
-
-    await pool.query(schema);
-
-    console.log(
-      "Database ready"
-    );
-
-    app.listen(
-      PORT,
-      () => {
-        console.log(
-          `TaskMint running on port ${PORT}`
-        );
-      }
-    );
-
-  } catch (e) {
-
-    console.error(
-      "Init error:",
-      e
-    );
-
-    throw e;
-  }
-}
-
-init().catch((e) => {
-
-  console.error(
-    "========== STARTUP ERROR =========="
-  );
-
-  console.error(e);
-  console.error(e.stack);
-
-  process.exit(1);
-});
+       
