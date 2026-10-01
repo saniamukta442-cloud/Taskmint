@@ -2476,26 +2476,233 @@ await pool.query(`
     SELECT 1
     FROM tm_tasks
     WHERE task_type='ad'
-  )
-`);
+/* =========================================================
+   DATABASE INITIALIZATION / MIGRATION
+========================================================= */
+
+async function init() {
+  try {
+
+    console.log("Starting database initialization...");
 
     /*
-      Make sure old completion rows have status.
+      1. Test database connection
+    */
+
+    await pool.query("SELECT 1");
+
+    console.log("Database connection OK.");
+
+
+    /*
+      2. Run schema.sql
+    */
+
+    const schemaPath = path.join(
+      __dirname,
+      "schema.sql"
+    );
+
+    if (!fs.existsSync(schemaPath)) {
+      throw new Error(
+        "schema.sql was not found."
+      );
+    }
+
+    const schema = fs.readFileSync(
+      schemaPath,
+      "utf8"
+    );
+
+    if (schema.trim()) {
+      await pool.query(schema);
+    }
+
+    console.log(
+      "Database schema loaded."
+    );
+
+
+    /*
+      3. Make sure task table exists
+    */
+
+    const taskTable = await pool.query(`
+      SELECT to_regclass('public.tm_tasks') AS table_name
+    `);
+
+    if (!taskTable.rows[0].table_name) {
+      throw new Error(
+        "tm_tasks table does not exist after schema initialization."
+      );
+    }
+
+    console.log(
+      "tm_tasks table confirmed."
+    );
+
+
+    /*
+      4. TASK TABLE MIGRATION
+    */
+
+    console.log(
+      "Running task database migration..."
+    );
+
+    await pool.query(`
+      ALTER TABLE tm_tasks
+      ADD COLUMN IF NOT EXISTS provider VARCHAR(80)
+    `);
+
+    await pool.query(`
+      ALTER TABLE tm_tasks
+      ADD COLUMN IF NOT EXISTS provider_task_id VARCHAR(255)
+    `);
+
+    await pool.query(`
+      ALTER TABLE tm_tasks
+      ADD COLUMN IF NOT EXISTS icon VARCHAR(20)
+    `);
+
+    await pool.query(`
+      ALTER TABLE tm_tasks
+      ADD COLUMN IF NOT EXISTS daily_limit INTEGER
+    `);
+
+
+    /*
+      5. TASK COMPLETION MIGRATION
     */
 
     await pool.query(`
-      UPDATE tm_task_completions
-      SET status='pending'
-      WHERE status IS NULL;
+      ALTER TABLE tm_task_completions
+      ADD COLUMN IF NOT EXISTS status VARCHAR(20)
     `);
+
+    await pool.query(`
+      ALTER TABLE tm_task_completions
+      ADD COLUMN IF NOT EXISTS started_at TIMESTAMP
+    `);
+
+    await pool.query(`
+      ALTER TABLE tm_task_completions
+      ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP
+    `);
+
+
+    /*
+      6. Set defaults for old rows
+    */
+
+    await pool.query(`
+      UPDATE tm_tasks
+      SET provider = 'internal'
+      WHERE provider IS NULL
+    `);
+
+    await pool.query(`
+      UPDATE tm_tasks
+      SET icon = '🎯'
+      WHERE icon IS NULL
+    `);
+
+    await pool.query(`
+      UPDATE tm_task_completions
+      SET status = 'pending'
+      WHERE status IS NULL
+    `);
+
+
+    /*
+      7. Verify provider column REALLY exists
+    */
+
+    const providerCheck = await pool.query(`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'tm_tasks'
+        AND column_name = 'provider'
+    `);
+
+    if (!providerCheck.rows.length) {
+      throw new Error(
+        "Migration failed: tm_tasks.provider column was not created."
+      );
+    }
+
+    console.log(
+      "tm_tasks.provider column confirmed."
+    );
+
+
+    /*
+      8. Create default Watch & Earn task
+         only if no ad task exists
+    */
+
+    await pool.query(`
+      INSERT INTO tm_tasks
+      (
+        title,
+        description,
+        reward,
+        task_type,
+        provider,
+        provider_task_id,
+        icon,
+        active
+      )
+      SELECT
+        'Watch & Earn',
+        'Watch an eligible sponsored activity and receive the verified reward.',
+        0.50,
+        'ad',
+        'internal',
+        NULL,
+        '🎬',
+        true
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM tm_tasks
+        WHERE task_type = 'ad'
+      )
+    `);
+
+
+    /*
+      9. Database ready
+    */
 
     console.log(
       "Database migration completed."
     );
 
+    console.log(
+      "Database ready."
+    );
+
 
     /*
-      Start server
+      10. SPA fallback
+    */
+
+    app.get("/{*splat}", (req, res) => {
+
+      res.sendFile(
+        path.join(
+          __dirname,
+          "public",
+          "index.html"
+        )
+      );
+
+    });
+
+
+    /*
+      11. Start server
     */
 
     app.listen(
@@ -2514,27 +2721,14 @@ await pool.query(`
     );
 
     console.error(e);
-    console.error(e.stack);
+
+    if (e.stack) {
+      console.error(e.stack);
+    }
 
     process.exit(1);
   }
 }
-
-
-/* =========================================================
-   SPA FALLBACK
-========================================================= */
-
-app.get("*", (req, res) => {
-
-  res.sendFile(
-    path.join(
-      __dirname,
-      "public",
-      "index.html"
-    )
-  );
-});
 
 
 /* =========================================================
