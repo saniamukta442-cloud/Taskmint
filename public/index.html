@@ -633,6 +633,192 @@ nav{
   }
 }
 
+/* =========================
+   TASKS
+========================= */
+
+.taskPanel{
+  margin-top:22px;
+}
+
+.sectionHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  margin-bottom:18px;
+}
+
+.sectionHead h2{
+  margin:5px 0 5px;
+  font-size:24px;
+}
+
+.sectionHead p{
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+}
+
+.tasksList{
+  display:grid;
+  grid-template-columns:
+    repeat(auto-fit,minmax(250px,1fr));
+  gap:14px;
+}
+
+.taskCard{
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.05),
+      rgba(255,255,255,.02)
+    );
+
+  border:1px solid var(--line);
+
+  border-radius:18px;
+
+  padding:18px;
+
+  transition:
+    transform .18s ease,
+    border-color .18s ease;
+}
+
+.taskCard:hover{
+  transform:translateY(-2px);
+  border-color:rgba(53,214,255,.35);
+}
+
+.taskTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+
+.taskIcon{
+  width:48px;
+  height:48px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:14px;
+
+  background:
+    rgba(53,214,255,.10);
+
+  font-size:25px;
+}
+
+.taskReward{
+  color:var(--green);
+  font-weight:800;
+  font-size:17px;
+}
+
+.taskTitle{
+  margin:14px 0 7px;
+
+  font-size:17px;
+  font-weight:750;
+}
+
+.taskDescription{
+  color:var(--muted);
+
+  font-size:13px;
+  line-height:1.55;
+
+  min-height:42px;
+
+  margin-bottom:15px;
+}
+
+.taskMeta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  gap:10px;
+
+  margin-top:10px;
+}
+
+.taskType{
+  font-size:12px;
+  color:var(--muted);
+
+  padding:6px 9px;
+
+  border-radius:999px;
+
+  background:rgba(255,255,255,.05);
+}
+
+.taskStartBtn{
+  border:0;
+
+  border-radius:10px;
+
+  padding:10px 15px;
+
+  font-weight:750;
+
+  color:#071019;
+
+  background:var(--cyan);
+
+  cursor:pointer;
+}
+
+.taskStartBtn:hover{
+  filter:brightness(1.08);
+}
+
+.taskStartBtn:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.taskPending{
+  color:var(--yellow);
+  font-size:13px;
+  font-weight:700;
+}
+
+.taskCompleted{
+  color:var(--green);
+  font-size:13px;
+  font-weight:700;
+}
+
+.taskEmpty{
+  text-align:center;
+
+  padding:30px 15px;
+
+  color:var(--muted);
+}
+
+@media(max-width:600px){
+
+  .sectionHead{
+    align-items:flex-start;
+  }
+
+  .tasksList{
+    grid-template-columns:1fr;
+  }
+
+  .taskCard{
+    padding:15px;
+  }
+}
+  
 </style>
 </head>
 
@@ -820,6 +1006,33 @@ Choose an available activity and follow its instructions.
 🎬
 </div>
 
+<section class="panel taskPanel" id="tasksSection">
+
+  <div class="sectionHead">
+    <div>
+      <div class="eyebrow">✦ EARN MORE</div>
+      <h2>Available Tasks</h2>
+      <p>Complete eligible activities and earn rewards.</p>
+    </div>
+
+    <button
+      class="smallBtn"
+      onclick="loadTasks()">
+      Refresh
+    </button>
+  </div>
+
+  <div id="tasksLoading" class="taskEmpty">
+    Loading tasks...
+  </div>
+
+  <div
+    id="tasksList"
+    class="tasksList">
+  </div>
+
+</section>
+  
 <h3>
 Watch & Earn
 </h3>
@@ -1017,10 +1230,26 @@ Log out
 
 <!-- BALANCE -->
 
-<div
-  class="dashGrid"
-  style="margin-top:18px">
-  
+<div class="dashGrid">
+
+  <div class="statCard">
+    <div class="statLabel">Available Balance</div>
+    <div class="statValue" id="dashBalance">$0.00</div>
+  </div>
+
+  <div class="statCard">
+    <div class="statLabel">Total Earned</div>
+    <div class="statValue" id="dashTotal">$0.00</div>
+  </div>
+
+  <div class="statCard">
+    <div class="statLabel">Referral Code</div>
+    <div class="statValue small" id="dashReferral">—</div>
+    <button class="smallBtn" onclick="copyReferralCode()">
+      Copy Code
+    </button>
+  </div>
+
 </div>
 
 <!-- EARNING CARDS -->
@@ -1343,6 +1572,406 @@ Submit request
 </div>
 </div>
 
+/* =========================================================
+   TASK SYSTEM
+========================================================= */
+
+async function loadTasks(){
+
+  const list = document.getElementById("tasksList");
+  const loading = document.getElementById("tasksLoading");
+
+  if(!list) return;
+
+  list.innerHTML = "";
+
+  if(loading){
+    loading.style.display = "block";
+    loading.textContent = "Loading tasks...";
+  }
+
+  try{
+
+    const response = await fetch("/api/tasks",{
+      headers:{
+        "Authorization":`Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if(!response.ok || !data.ok){
+
+      if(response.status === 401){
+        logout();
+        return;
+      }
+
+      throw new Error(
+        data.error || "Could not load tasks."
+      );
+    }
+
+    if(loading){
+      loading.style.display = "none";
+    }
+
+    if(!data.tasks || !data.tasks.length){
+
+      list.innerHTML = `
+        <div class="taskEmpty">
+          <div style="font-size:35px;margin-bottom:8px;">
+            🎯
+          </div>
+
+          <div style="font-weight:700;">
+            No tasks available right now.
+          </div>
+
+          <div style="margin-top:5px;">
+            Please check again later.
+          </div>
+        </div>
+      `;
+
+      return;
+    }
+
+    list.innerHTML = data.tasks
+      .map(task => renderTask(task))
+      .join("");
+
+    await loadMyTasks();
+
+  }catch(error){
+
+    console.error("Load tasks error:",error);
+
+    if(loading){
+      loading.style.display = "none";
+    }
+
+    list.innerHTML = `
+      <div class="taskEmpty">
+        ⚠️ Could not load tasks.
+        <br>
+        <button
+          class="smallBtn"
+          style="margin-top:12px;"
+          onclick="loadTasks()">
+          Try Again
+        </button>
+      </div>
+    `;
+  }
+}
+
+
+function renderTask(task){
+
+  const reward =
+    Number(task.reward || 0).toFixed(2);
+
+  const icon =
+    escapeHtml(task.icon || "🎯");
+
+  const title =
+    escapeHtml(task.title || "Task");
+
+  const description =
+    escapeHtml(
+      task.description ||
+      "Complete this task to earn a reward."
+    );
+
+  const type =
+    escapeHtml(
+      String(task.task_type || "task")
+        .replace("_"," ")
+        .toUpperCase()
+    );
+
+  return `
+    <div
+      class="taskCard"
+      id="task-card-${task.id}">
+
+      <div class="taskTop">
+
+        <div class="taskIcon">
+          ${icon}
+        </div>
+
+        <div class="taskReward">
+          +$${reward}
+        </div>
+
+      </div>
+
+      <div class="taskTitle">
+        ${title}
+      </div>
+
+      <div class="taskDescription">
+        ${description}
+      </div>
+
+      <div class="taskMeta">
+
+        <span class="taskType">
+          ${type}
+        </span>
+
+        <button
+          class="taskStartBtn"
+          id="task-btn-${task.id}"
+          onclick="startTask(${task.id})">
+          Start
+        </button>
+
+      </div>
+
+      <div
+        id="task-status-${task.id}"
+        style="margin-top:10px;">
+      </div>
+
+    </div>
+  `;
+}
+
+
+/* =========================================================
+   START TASK
+========================================================= */
+
+async function startTask(taskId){
+
+  const button =
+    document.getElementById(
+      `task-btn-${taskId}`
+    );
+
+  const status =
+    document.getElementById(
+      `task-status-${taskId}`
+    );
+
+  if(button){
+
+    button.disabled = true;
+    button.textContent = "Starting...";
+  }
+
+  try{
+
+    const response = await fetch(
+      `/api/tasks/${taskId}/start`,
+      {
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json",
+          "Authorization":`Bearer ${token}`
+        }
+      }
+    );
+
+    const data =
+      await response.json();
+
+    if(!response.ok || !data.ok){
+
+      throw new Error(
+        data.error ||
+        "Could not start task."
+      );
+    }
+
+    if(button){
+
+      button.disabled = true;
+      button.textContent = "Pending";
+    }
+
+    if(status){
+
+      status.innerHTML = `
+        <div class="taskPending">
+          ⏳ Task started — waiting for verification
+        </div>
+      `;
+    }
+
+    showNotice(
+      "Task started successfully.",
+      "success"
+    );
+
+    await loadMyTasks();
+
+  }catch(error){
+
+    console.error(
+      "Start task error:",
+      error
+    );
+
+    if(button){
+
+      button.disabled = false;
+      button.textContent = "Start";
+    }
+
+    if(status){
+
+      status.innerHTML = `
+        <div style="color:var(--red);font-size:13px;">
+          ${escapeHtml(error.message)}
+        </div>
+      `;
+    }
+  }
+}
+
+
+/* =========================================================
+   MY TASK STATUS
+========================================================= */
+
+async function loadMyTasks(){
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/my-tasks",
+        {
+          headers:{
+            "Authorization":`Bearer ${token}`
+          }
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if(!response.ok || !data.ok){
+      return;
+    }
+
+    if(!Array.isArray(data.items)){
+      return;
+    }
+
+    data.items.forEach(item => {
+
+      const button =
+        document.getElementById(
+          `task-btn-${item.task_id}`
+        );
+
+      const status =
+        document.getElementById(
+          `task-status-${item.task_id}`
+        );
+
+      if(!button) return;
+
+      if(item.status === "completed"){
+
+        button.disabled = true;
+        button.textContent = "Completed";
+
+        if(status){
+
+          status.innerHTML = `
+            <div class="taskCompleted">
+              ✓ Completed — reward credited
+            </div>
+          `;
+        }
+
+      }else if(item.status === "pending"){
+
+        button.disabled = true;
+        button.textContent = "Pending";
+
+        if(status){
+
+          status.innerHTML = `
+            <div class="taskPending">
+              ⏳ Waiting for verification
+            </div>
+          `;
+        }
+
+      }else if(item.status === "rejected"){
+
+        button.disabled = false;
+        button.textContent = "Start Again";
+
+        if(status){
+
+          status.innerHTML = `
+            <div style="color:var(--red);font-size:13px;">
+              Task was rejected
+            </div>
+          `;
+        }
+      }
+
+    });
+
+  }catch(error){
+
+    console.error(
+      "My tasks error:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   REFERRAL CODE
+========================================================= */
+
+function copyReferralCode(){
+
+  const element =
+    document.getElementById(
+      "dashReferral"
+    );
+
+  if(!element) return;
+
+  const code =
+    element.textContent.trim();
+
+  if(!code || code === "—"){
+    return;
+  }
+
+  navigator.clipboard
+    .writeText(code)
+    .then(() => {
+
+      showNotice(
+        "Referral code copied.",
+        "success"
+      );
+
+    })
+    .catch(() => {
+
+      showNotice(
+        "Could not copy referral code.",
+        "error"
+      );
+    });
+}
+  
 <footer>
 
 <div class="wrap footer">
