@@ -1866,4 +1866,625 @@ app.post(
       );
 
       res.status(500).json({
-       
+        ok: false,
+        error: "Could not approve task."
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+/*
+  Admin rejects a task completion
+*/
+
+app.post(
+  "/api/admin/task-completions/:id/reject",
+  adminAuth,
+  async (req, res) => {
+
+    const completionId =
+      Number(req.params.id);
+
+    if (!Number.isInteger(completionId)) {
+      return res.status(400).json({
+        ok: false,
+        error: "Invalid completion ID."
+      });
+    }
+
+    try {
+
+      const r = await pool.query(
+        `UPDATE tm_task_completions
+         SET status='rejected'
+         WHERE id=$1
+           AND status='pending'
+         RETURNING id`,
+        [completionId]
+      );
+
+      if (!r.rows.length) {
+        return res.status(400).json({
+          ok: false,
+          error:
+            "Completion not found or already processed."
+        });
+      }
+
+      res.json({
+        ok: true,
+        message: "Task completion rejected."
+      });
+
+    } catch (e) {
+
+      console.error(
+        "Reject task error:",
+        e
+      );
+
+      res.status(500).json({
+        ok: false,
+        error: "Could not reject task."
+      });
+    }
+  }
+);
+
+
+/* =========================================================
+   WITHDRAWALS
+========================================================= */
+
+app.post("/api/withdrawals", auth, async (req, res) => {
+
+  const {
+    amount,
+    method,
+    accountNumber,
+    accountName
+  } = req.body || {};
+
+  const value = Number(amount);
+
+  if (
+    !Number.isFinite(value) ||
+    value < MIN_WITHDRAW
+  ) {
+    return res.status(400).json({
+      ok: false,
+      error:
+        `Minimum withdrawal is $${MIN_WITHDRAW.toFixed(2)}.`
+    });
+  }
+
+  if (
+    !["bkash", "nagad"].includes(
+      String(method).toLowerCase()
+    )
+  ) {
+    return res.status(400).json({
+      ok: false,
+      error: "Select bKash or Nagad."
+    });
+  }
+
+  if (
+    !/^[0-9]{11}$/.test(
+      String(accountNumber || "")
+    )
+  ) {
+    return res.status(400).json({
+      ok: false,
+      error:
+        "Enter a valid 11-digit account number."
+    });
+  }
+
+  const client = await pool.connect();
+
+  try {
+
+    await client.query("BEGIN");
+
+    const u = await client.query(
+      `SELECT id,balance
+       FROM tm_users
+       WHERE id=$1
+       FOR UPDATE`,
+      [req.auth.userId]
+    );
+
+    if (!u.rows.length) {
+
+      await client.query("ROLLBACK");
+
+      return res.status(404).json({
+        ok: false,
+        error: "User not found."
+      });
+    }
+
+    if (
+      Number(u.rows[0].balance) < value
+    ) {
+
+      await client.query("ROLLBACK");
+
+      return res.status(400).json({
+        ok: false,
+        error: "Insufficient balance."
+      });
+    }
+
+    await client.query(
+      `INSERT INTO tm_withdrawals
+       (
+         user_id,
+         amount,
+         method,
+         account_number,
+         account_name
+       )
+       VALUES($1,$2,$3,$4,$5)`,
+      [
+        req.auth.userId,
+        value,
+        String(method).toLowerCase(),
+        String(accountNumber),
+        String(accountName || "").trim()
+      ]
+    );
+
+    await client.query(
+      `UPDATE tm_users
+       SET balance=balance-$1
+       WHERE id=$2`,
+      [
+        value,
+        req.auth.userId
+      ]
+    );
+
+    await client.query(
+      `INSERT INTO tm_transactions
+       (
+         user_id,
+         type,
+         amount,
+         description
+       )
+       VALUES($1,'withdrawal',$2,$3)`,
+      [
+        req.auth.userId,
+        -value,
+        `Withdrawal request via ${String(method).toLowerCase()}`
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    res.json({
+      ok: true,
+      message: "Withdrawal request submitted."
+    });
+
+  } catch (e) {
+
+    await client.query("ROLLBACK");
+
+    console.error(
+      "Withdrawal error:",
+      e
+    );
+
+    res.status(500).json({
+      ok: false,
+      error: "Could not submit withdrawal."
+    });
+
+  } finally {
+    client.release();
+  }
+});
+
+
+/* =========================================================
+   ADMIN WITHDRAWALS
+========================================================= */
+
+app.get(
+  "/api/admin/withdrawals",
+  adminAuth,
+  async (req, res) => {
+
+    try {
+
+      const r = await pool.query(
+        `SELECT
+           w.id,
+           w.user_id,
+           w.amount,
+           w.method,
+           w.account_number,
+           w.account_name,
+           w.status,
+           w.created_at,
+           w.processed_at,
+           u.display_name,
+           u.email,
+           u.balance
+         FROM tm_withdrawals w
+         JOIN tm_users u
+           ON u.id=w.user_id
+         ORDER BY w.id DESC
+         LIMIT 200`
+      );
+
+      res.json({
+        ok: true,
+        items: r.rows
+      });
+
+    } catch (e) {
+
+      console.error(
+        "Admin withdrawals error:",
+        e
+      );
+
+      res.status(500).json({
+        ok: false,
+        error: "Could not load withdrawals."
+      });
+    }
+  }
+);
+
+
+app.post(
+  "/api/admin/withdrawals/:id/approve",
+  adminAuth,
+  async (req, res) => {
+
+    const withdrawalId =
+      Number(req.params.id);
+
+    if (!Number.isInteger(withdrawalId)) {
+      return res.status(400).json({
+        ok: false,
+        error: "Invalid withdrawal ID."
+      });
+    }
+
+    const client = await pool.connect();
+
+    try {
+
+      await client.query("BEGIN");
+
+      const r = await client.query(
+        `SELECT
+           id,
+           user_id,
+           amount,
+           status
+         FROM tm_withdrawals
+         WHERE id=$1
+         FOR UPDATE`,
+        [withdrawalId]
+      );
+
+      if (!r.rows.length) {
+
+        await client.query("ROLLBACK");
+
+        return res.status(404).json({
+          ok: false,
+          error: "Withdrawal not found."
+        });
+      }
+
+      const withdrawal = r.rows[0];
+
+      if (withdrawal.status !== "pending") {
+
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          ok: false,
+          error:
+            `Withdrawal is already ${withdrawal.status}.`
+        });
+      }
+
+      await client.query(
+        `UPDATE tm_withdrawals
+         SET
+           status='approved',
+           processed_at=CURRENT_TIMESTAMP
+         WHERE id=$1`,
+        [withdrawalId]
+      );
+
+      await client.query("COMMIT");
+
+      res.json({
+        ok: true,
+        message:
+          "Withdrawal approved successfully."
+      });
+
+    } catch (e) {
+
+      await client.query("ROLLBACK");
+
+      console.error(
+        "Approve withdrawal error:",
+        e
+      );
+
+      res.status(500).json({
+        ok: false,
+        error:
+          "Could not approve withdrawal."
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+app.post(
+  "/api/admin/withdrawals/:id/reject",
+  adminAuth,
+  async (req, res) => {
+
+    const withdrawalId =
+      Number(req.params.id);
+
+    if (!Number.isInteger(withdrawalId)) {
+      return res.status(400).json({
+        ok: false,
+        error: "Invalid withdrawal ID."
+      });
+    }
+
+    const client = await pool.connect();
+
+    try {
+
+      await client.query("BEGIN");
+
+      const r = await client.query(
+        `SELECT
+           id,
+           user_id,
+           amount,
+           status,
+           method
+         FROM tm_withdrawals
+         WHERE id=$1
+         FOR UPDATE`,
+        [withdrawalId]
+      );
+
+      if (!r.rows.length) {
+
+        await client.query("ROLLBACK");
+
+        return res.status(404).json({
+          ok: false,
+          error: "Withdrawal not found."
+        });
+      }
+
+      const withdrawal = r.rows[0];
+
+      if (withdrawal.status !== "pending") {
+
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          ok: false,
+          error:
+            `Withdrawal is already ${withdrawal.status}.`
+        });
+      }
+
+      await client.query(
+        `UPDATE tm_users
+         SET balance=balance+$1
+         WHERE id=$2`,
+        [
+          withdrawal.amount,
+          withdrawal.user_id
+        ]
+      );
+
+      await client.query(
+        `UPDATE tm_withdrawals
+         SET
+           status='rejected',
+           processed_at=CURRENT_TIMESTAMP
+         WHERE id=$1`,
+        [withdrawalId]
+      );
+
+      await client.query(
+        `INSERT INTO tm_transactions
+         (
+           user_id,
+           type,
+           amount,
+           description
+         )
+         VALUES($1,'withdrawal_refund',$2,$3)`,
+        [
+          withdrawal.user_id,
+          withdrawal.amount,
+          `Withdrawal rejected - ${withdrawal.method}`
+        ]
+      );
+
+      await client.query("COMMIT");
+
+      res.json({
+        ok: true,
+        message:
+          "Withdrawal rejected and balance refunded."
+      });
+
+    } catch (e) {
+
+      await client.query("ROLLBACK");
+
+      console.error(
+        "Reject withdrawal error:",
+        e
+      );
+
+      res.status(500).json({
+        ok: false,
+        error:
+          "Could not reject withdrawal."
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
+
+/* =========================================================
+   DATABASE INITIALIZATION / MIGRATION
+========================================================= */
+
+async function init() {
+
+  try {
+
+    /*
+      Run schema.sql
+    */
+
+    const schemaPath =
+      path.join(__dirname, "schema.sql");
+
+    if (fs.existsSync(schemaPath)) {
+
+      const schema =
+        fs.readFileSync(
+          schemaPath,
+          "utf8"
+        );
+
+      await pool.query(schema);
+
+      console.log(
+        "Database schema loaded."
+      );
+    }
+
+
+    /*
+      SAFE MIGRATION
+
+      If tm_tasks was created by an older
+      schema, these columns are added
+      without deleting existing data.
+    */
+
+    await pool.query(`
+      ALTER TABLE tm_tasks
+      ADD COLUMN IF NOT EXISTS provider VARCHAR(50);
+
+      ALTER TABLE tm_tasks
+      ADD COLUMN IF NOT EXISTS provider_task_id VARCHAR(255);
+
+      ALTER TABLE tm_tasks
+      ADD COLUMN IF NOT EXISTS icon VARCHAR(20) DEFAULT '🎯';
+
+      ALTER TABLE tm_tasks
+      ADD COLUMN IF NOT EXISTS daily_limit INTEGER;
+
+      ALTER TABLE tm_task_completions
+      ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'pending';
+
+      ALTER TABLE tm_task_completions
+      ADD COLUMN IF NOT EXISTS started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+      ALTER TABLE tm_task_completions
+      ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP;
+    `);
+
+    /*
+      Make sure old completion rows have status.
+    */
+
+    await pool.query(`
+      UPDATE tm_task_completions
+      SET status='pending'
+      WHERE status IS NULL;
+    `);
+
+    console.log(
+      "Database migration completed."
+    );
+
+
+    /*
+      Start server
+    */
+
+    app.listen(
+      PORT,
+      () => {
+        console.log(
+          `TaskMint running on port ${PORT}`
+        );
+      }
+    );
+
+  } catch (e) {
+
+    console.error(
+      "========== STARTUP ERROR =========="
+    );
+
+    console.error(e);
+    console.error(e.stack);
+
+    process.exit(1);
+  }
+}
+
+
+/* =========================================================
+   SPA FALLBACK
+========================================================= */
+
+app.get("*", (req, res) => {
+
+  res.sendFile(
+    path.join(
+      __dirname,
+      "public",
+      "index.html"
+    )
+  );
+});
+
+
+/* =========================================================
+   START
+========================================================= */
+
+init();
