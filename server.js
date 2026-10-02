@@ -32,9 +32,13 @@ const pool = new Pool({
     : false
 });
 
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = Buffer.from(buf);
+  }
+}));
 
+app.use(express.static(path.join(__dirname, "public")));
 
 /* =========================================================
    HELPERS
@@ -1164,6 +1168,782 @@ app.get("/api/my-tasks", auth, async (req, res) => {
     });
   }
 });
+
+/* =========================================================
+   ADGEM OFFERWALL + SERVER POSTBACK
+========================================================= */
+
+
+/*
+  Generate stable AdGem player ID.
+
+  AdGem requires:
+  - lowercase
+  - alphanumeric / hyphen / underscore
+  - max 255 characters
+
+  Example:
+  TaskMint user ID 25
+  becomes:
+  user_25
+*/
+
+function makeAdGemPlayerId(userId) {
+  return `user_${String(userId)}`
+    .toLowerCase()
+    .replace(/[^a-z0-9_-]/g, "");
+}
+
+
+/*
+  Get AdGem Offerwall URL for logged-in user.
+
+  The base URL will come from:
+  ADGEM_OFFERWALL_URL
+
+  Then we add:
+  ?player_id=user_123
+*/
+
+app.get(
+  "/api/adgem/offerwall",
+  auth,
+  async (req, res) => {
+
+    try {
+
+      const baseUrl =
+        String(
+          process.env.ADGEM_OFFERWALL_URL || ""
+        ).trim();
+
+      if (!baseUrl) {
+        return res.status(503).json({
+          ok: false,
+          error:
+            "AdGem Offerwall is not configured yet."
+        });
+      }
+
+      const playerId =
+        makeAdGemPlayerId(
+          req.auth.userId
+        );
+
+      const offerwallUrl =
+        new URL(baseUrl);
+
+      offerwallUrl.searchParams.set(
+        "player_id",
+        playerId
+      );
+
+      res.json({
+        ok: true,
+        playerId,
+        url: offerwallUrl.toString()
+      });
+
+    } catch (e) {
+
+      console.error(
+        "AdGem Offerwall error:",
+        e
+      );
+
+      res.status(500).json({
+        ok: false,
+        error:
+          "Could not create AdGem Offerwall URL."
+      });
+    }
+  }
+);
+
+
+/*
+  AdGem v3 Server-to-Server Postback
+
+  AdGem sends:
+
+  POST /api/adgem/postback
+
+  Headers:
+    Signature: HMAC-SHA256(raw body)
+
+  Body:
+    {
+      request_id,
+      timestamp,
+      data: {
+        app_id,
+        player_id,
+        amount,
+        payout,
+        conversion_id,
+        ...
+      }
+    }
+*/
+
+app.post(
+  "/api/adgem/postback",
+  async (req, res) => {
+
+    try {
+
+      /* ===================================================
+         1. CHECK POSTBACK KEY
+      =================================================== */
+
+      const postbackKey =
+        String(
+          process.env.ADGEM_POSTBACK_KEY || ""
+        );
+
+      if (!postbackKey) {
+
+        console.error(
+          "ADGEM_POSTBACK_KEY is not configured."
+        );
+
+        return res
+          .status(500)
+          .send("Postback not configured.");
+      }
+
+
+      /* ===================================================
+         2. VERIFY SIGNATURE
+      =================================================== */
+
+      const receivedSignature =
+        String(
+          req.get("Signature") || ""
+        ).trim();
+
+      if (!receivedSignature) {
+
+        console.warn(
+          "AdGem postback rejected: missing Signature."
+        );
+
+        return res
+          .status(401)
+          .send("Missing signature.");
+      }
+
+
+      const rawBody =
+        req.rawBody || Buffer.from("");
+
+
+      const expectedSignature =
+        crypto
+          .createHmac(
+            "sha256",
+            postbackKey
+          )
+          .update(rawBody)
+          .digest("hex");
+
+
+      const expectedBuffer =
+        Buffer.from(
+          expectedSignature,
+          "utf8"
+        );
+
+      const receivedBuffer =
+        Buffer.from(
+          receivedSignature,
+          "utf8"
+        );
+
+
+      const signatureValid =
+        expectedBuffer.length ===
+          receivedBuffer.length &&
+        crypto.timingSafeEqual(
+          expectedBuffer,
+          receivedBuffer
+        );
+
+
+      if (!signatureValid) {
+
+        console.warn(
+          "AdGem postback rejected: invalid signature."
+        );
+
+        return res
+          .status(401)
+          .send("Invalid signature.");
+      }
+
+
+      /* ===================================================
+         3. READ BODY
+      =================================================== */
+
+      const body =
+        req.body || {};
+
+      const requestId =
+        String(
+          body.request_id || ""
+        ).trim();
+
+      const timestamp =
+        Number(body.timestamp);
+
+      const data =
+        body.data || {};
+
+
+      if (!requestId) {
+
+        return res
+          .status(400)
+          .send("Missing request_id.");
+      }
+
+
+      if (!data.player_id) {
+
+        return res
+          .status(400)
+          .send("Missing player_id.");
+      }
+
+
+      /* ===================================================
+         4. VERIFY APP ID
+      =================================================== */
+
+      const configuredAppId =
+        String(
+          process.env.ADGEM_APP_ID || ""
+        ).trim();
+
+      const receivedAppId =
+        String(
+          data.app_id || ""
+        ).trim();
+
+
+      if (
+        configuredAppId &&
+        receivedAppId !== configuredAppId
+      ) {
+
+        console.warn(
+          "AdGem postback rejected: invalid app_id.",
+          {
+            receivedAppId,
+            configuredAppId
+          }
+        );
+
+        return res
+          .status(403)
+          .send("Invalid app ID.");
+      }
+
+
+      /* ===================================================
+         5. VERIFY TIMESTAMP
+      =================================================== */
+
+      if (
+        Number.isFinite(timestamp) &&
+        timestamp > 0
+      ) {
+
+        const now =
+          Math.floor(
+            Date.now() / 1000
+          );
+
+        const age =
+          Math.abs(
+            now - timestamp
+          );
+
+        /*
+          Allow up to 24 hours difference.
+
+          This prevents very old replay attempts
+          while allowing delayed/retried postbacks.
+        */
+
+        if (age > 86400) {
+
+          console.warn(
+            "AdGem postback rejected: timestamp too old."
+          );
+
+          return res
+            .status(400)
+            .send("Expired postback.");
+        }
+      }
+
+
+      /* ===================================================
+         6. READ CONVERSION DATA
+      =================================================== */
+
+      const playerId =
+        String(
+          data.player_id || ""
+        ).trim();
+
+      const conversionId =
+        String(
+          data.conversion_id || ""
+        ).trim() || null;
+
+      const campaignId =
+        String(
+          data.campaign_id || ""
+        ).trim() || null;
+
+      const offerId =
+        String(
+          data.offer_id || ""
+        ).trim() || null;
+
+      const goalId =
+        String(
+          data.goal_id || ""
+        ).trim() || null;
+
+      const goalName =
+        String(
+          data.goal_name || ""
+        ).trim() || null;
+
+      const offerName =
+        String(
+          data.offer_name || ""
+        ).trim() || null;
+
+      const conversionType =
+        String(
+          data.conversion_type || ""
+        ).trim().toLowerCase();
+
+      const amount =
+        Number(data.amount || 0);
+
+      const payout =
+        Number(data.payout || 0);
+
+
+      /* ===================================================
+         7. ONLY REWARD CONVERSIONS
+      =================================================== */
+
+      if (
+        conversionType &&
+        conversionType !== "reward"
+      ) {
+
+        console.log(
+          "AdGem non-reward conversion received:",
+          {
+            requestId,
+            conversionType,
+            playerId
+          }
+        );
+
+        /*
+          Install events do not credit balance.
+        */
+
+        return res
+          .status(200)
+          .send("OK");
+      }
+
+
+      if (
+        !Number.isFinite(amount) ||
+        amount <= 0
+      ) {
+
+        console.log(
+          "AdGem postback has no reward amount:",
+          {
+            requestId,
+            playerId,
+            amount
+          }
+        );
+
+        return res
+          .status(200)
+          .send("OK");
+      }
+
+
+      /* ===================================================
+         8. MAP PLAYER ID → TASKMINT USER
+      =================================================== */
+
+      const playerPrefix =
+        "user_";
+
+      if (
+        !playerId.startsWith(
+          playerPrefix
+        )
+      ) {
+
+        console.warn(
+          "Invalid TaskMint player_id:",
+          playerId
+        );
+
+        return res
+          .status(400)
+          .send("Invalid player ID.");
+      }
+
+
+      const userIdText =
+        playerId.slice(
+          playerPrefix.length
+        );
+
+      const userId =
+        Number(userIdText);
+
+
+      if (
+        !Number.isInteger(userId) ||
+        userId <= 0
+      ) {
+
+        console.warn(
+          "Invalid TaskMint user ID:",
+          playerId
+        );
+
+        return res
+          .status(400)
+          .send("Invalid user.");
+      }
+
+
+      /* ===================================================
+         9. DATABASE TRANSACTION
+      =================================================== */
+
+      const client =
+        await pool.connect();
+
+      try {
+
+        await client.query(
+          "BEGIN"
+        );
+
+
+        /* ===============================================
+           Check user
+        =============================================== */
+
+        const userResult =
+          await client.query(
+            `SELECT
+               id,
+               balance,
+               total_earned,
+               status
+             FROM tm_users
+             WHERE id=$1
+             FOR UPDATE`,
+            [userId]
+          );
+
+
+        if (!userResult.rows.length) {
+
+          await client.query(
+            "ROLLBACK"
+          );
+
+          console.warn(
+            "AdGem user not found:",
+            userId
+          );
+
+          return res
+            .status(404)
+            .send("User not found.");
+        }
+
+
+        const user =
+          userResult.rows[0];
+
+
+        if (
+          user.status !== "active"
+        ) {
+
+          await client.query(
+            "ROLLBACK"
+          );
+
+          return res
+            .status(403)
+            .send("User inactive.");
+        }
+
+
+        /* ===============================================
+           Duplicate request check
+        =============================================== */
+
+        const duplicateRequest =
+          await client.query(
+            `SELECT id
+             FROM tm_adgem_postbacks
+             WHERE request_id=$1
+             LIMIT 1`,
+            [requestId]
+          );
+
+
+        if (
+          duplicateRequest.rows.length
+        ) {
+
+          await client.query(
+            "ROLLBACK"
+          );
+
+          console.log(
+            "AdGem duplicate request ignored:",
+            requestId
+          );
+
+          /*
+            Return 200 so AdGem does not keep
+            retrying an already processed event.
+          */
+
+          return res
+            .status(200)
+            .send("OK");
+        }
+
+
+        /* ===============================================
+           Duplicate conversion check
+        =============================================== */
+
+        if (conversionId) {
+
+          const duplicateConversion =
+            await client.query(
+              `SELECT id
+               FROM tm_adgem_postbacks
+               WHERE conversion_id=$1
+               LIMIT 1`,
+              [conversionId]
+            );
+
+
+          if (
+            duplicateConversion.rows.length
+          ) {
+
+            await client.query(
+              "ROLLBACK"
+            );
+
+            console.log(
+              "AdGem duplicate conversion ignored:",
+              conversionId
+            );
+
+            return res
+              .status(200)
+              .send("OK");
+          }
+        }
+
+
+        /* ===============================================
+           Credit TaskMint balance
+        =============================================== */
+
+        await client.query(
+          `UPDATE tm_users
+           SET
+             balance=balance+$1,
+             total_earned=total_earned+$1
+           WHERE id=$2`,
+          [
+            amount,
+            userId
+          ]
+        );
+
+
+        /* ===============================================
+           Transaction history
+        =============================================== */
+
+        await client.query(
+          `INSERT INTO tm_transactions
+           (
+             user_id,
+             type,
+             amount,
+             description
+           )
+           VALUES($1,'adgem_reward',$2,$3)`,
+          [
+            userId,
+            amount,
+            `AdGem reward: ${offerName || "Offer"}${goalName ? ` - ${goalName}` : ""}`
+          ]
+        );
+
+
+        /* ===============================================
+           Save AdGem postback
+        =============================================== */
+
+        await client.query(
+          `INSERT INTO tm_adgem_postbacks
+           (
+             request_id,
+             conversion_id,
+             player_id,
+             user_id,
+             app_id,
+             campaign_id,
+             offer_id,
+             goal_id,
+             goal_name,
+             offer_name,
+             amount,
+             payout,
+             conversion_type,
+             country,
+             raw_payload
+           )
+           VALUES(
+             $1,$2,$3,$4,$5,$6,$7,$8,
+             $9,$10,$11,$12,$13,$14,$15
+           )`,
+          [
+            requestId,
+            conversionId,
+            playerId,
+            userId,
+            receivedAppId || null,
+            campaignId,
+            offerId,
+            goalId,
+            goalName,
+            offerName,
+            amount,
+            Number.isFinite(payout)
+              ? payout
+              : 0,
+            conversionType || "reward",
+            data.country
+              ? String(data.country)
+              : null,
+            body
+          ]
+        );
+
+
+       /* ===============================================
+           Get updated balance
+       =============================================== */
+
+        const updatedUser =
+          await client.query(
+            `SELECT
+               balance,
+               total_earned
+             FROM tm_users
+             WHERE id=$1`,
+            [userId]
+          );
+
+
+        await client.query(
+          "COMMIT"
+        );
+
+
+        console.log(
+          "AdGem reward credited successfully:",
+          {
+            requestId,
+            conversionId,
+            userId,
+            amount,
+            payout
+          }
+        );
+
+
+        /*
+          AdGem only needs a successful HTTP response.
+        */
+
+        return res
+          .status(200)
+          .send("OK");
+
+
+      } catch (e) {
+
+        await client.query(
+          "ROLLBACK"
+        );
+
+        console.error(
+          "AdGem postback database error:",
+          e
+        );
+
+        return res
+          .status(500)
+          .send("Database error.");
+
+      } finally {
+
+        client.release();
+
+      }
+
+
+    } catch (e) {
+
+      console.error(
+        "AdGem postback error:",
+        e
+      );
+
+      return res
+        .status(500)
+        .send("Postback error.");
+    }
+  }
+);
 
 
 /* =========================================================
@@ -2381,6 +3161,50 @@ async function init() {
     await pool.query("SELECT 1");
 
     console.log("Database connection OK.");
+
+    /* =====================================================
+   ADGEM POSTBACK TABLE
+===================================================== */
+
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS tm_adgem_postbacks (
+    id BIGSERIAL PRIMARY KEY,
+
+    request_id VARCHAR(255) NOT NULL UNIQUE,
+
+    conversion_id VARCHAR(255) UNIQUE,
+
+    player_id VARCHAR(255) NOT NULL,
+
+    user_id BIGINT,
+
+    app_id VARCHAR(255),
+
+    campaign_id VARCHAR(255),
+
+    offer_id VARCHAR(255),
+
+    goal_id VARCHAR(255),
+
+    goal_name TEXT,
+
+    offer_name TEXT,
+
+    amount NUMERIC(12,4) NOT NULL DEFAULT 0,
+
+    payout NUMERIC(12,4) NOT NULL DEFAULT 0,
+
+    conversion_type VARCHAR(50),
+
+    country VARCHAR(10),
+
+    raw_payload JSONB NOT NULL,
+
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+console.log("AdGem postback table ready.");
 
 
     /* =====================================================
