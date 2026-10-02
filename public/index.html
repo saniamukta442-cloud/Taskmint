@@ -2466,78 +2466,6 @@ function setMoney(
 
 
 /* =====================================================
-   REFERRAL CODE
-===================================================== */
-
-function setReferralCode(
-  code
-){
-
-  const element =
-    $("dashReferral");
-
-  if(!element){
-    return;
-  }
-
-  element.textContent =
-    code || "—";
-
-}
-
-
-async function copyReferralCode(){
-
-  const element =
-    $("dashReferral");
-
-  if(!element){
-    return;
-  }
-
-  const code =
-    element.textContent.trim();
-
-
-  if(
-    !code ||
-    code === "—"
-  ){
-
-    showNotice(
-      "Referral code is not available.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  try{
-
-    await navigator.clipboard.writeText(
-      code
-    );
-
-    showNotice(
-      "Referral code copied.",
-      "success"
-    );
-
-  }catch{
-
-    showNotice(
-      "Could not copy referral code.",
-      "error"
-    );
-
-  }
-
-}
-
-
-/* =====================================================
    REFERRAL LINK
 ===================================================== */
 
@@ -3368,6 +3296,75 @@ async function watchGigaPub(){
       false;
 
     await loadAdStatus();
+
+  }
+
+}
+
+  /* =====================================================
+   ADGEM OFFERWALL
+===================================================== */
+
+async function openAdGemOffers(){
+
+  if(!token){
+
+    openAuth("login");
+
+    return;
+
+  }
+
+  try{
+
+    const response =
+      await fetch(
+        "/api/adgem/offerwall",
+        {
+          headers:{
+            Authorization:
+              "Bearer " + token
+          }
+        }
+      );
+
+
+    const data =
+      await response.json();
+
+
+    if(
+      !response.ok ||
+      !data.ok
+    ){
+
+      throw new Error(
+        data.error ||
+        "Could not open offers."
+      );
+
+    }
+
+
+    window.open(
+      data.url,
+      "_blank"
+    );
+
+
+  }catch(error){
+
+    console.error(
+      "AdGem error:",
+      error
+    );
+
+
+    showNotice(
+      error.message ||
+      "Could not open AdGem offers.",
+      "error"
+    );
 
   }
 
