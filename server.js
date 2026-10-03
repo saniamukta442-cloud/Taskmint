@@ -16,7 +16,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 const AD_REWARD = 0.50;
 const DAILY_BONUS = 1.00;
-const REFERRAL_REWARD = 5.00;
+const REFERRAL_REWARD = 2.50;
 const MIN_WITHDRAW = 50.00;
 
 const DAILY_AD_LIMIT = 30;
