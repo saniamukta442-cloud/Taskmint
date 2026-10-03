@@ -3808,28 +3808,80 @@ async function loadTasks(){
 }
 
 
-/* Render individual task */
+/* =====================================================
+   RENDER INDIVIDUAL TASK
+===================================================== */
 
 function renderTask(task){
-
-  let reward = Number(task.reward || 0).toFixed(2);
-
-if(isWatchEarn){
-  reward = "0.50";
-}
-
-  const icon =
-    escapeHtml(
-      task.icon || "🎯"
-    );
 
   const titleRaw =
     String(
       task.title || "Task"
     ).trim();
 
+  const titleLower =
+    titleRaw.toLowerCase();
+
+  const typeRaw =
+    String(
+      task.task_type || ""
+    ).trim();
+
+  const typeLower =
+    typeRaw.toLowerCase();
+
+
+  /*
+    Detect special tasks
+  */
+
+  const isGameOffer =
+    titleLower.includes("game offer") ||
+    titleLower.includes("game offers") ||
+    typeLower === "game_offer" ||
+    typeLower.includes("game_offer") ||
+    typeLower === "adgem";
+
+
+  const isWatchEarn =
+    titleLower.includes("watch & earn") ||
+    titleLower.includes("watch and earn") ||
+    titleLower.includes("watch video") ||
+    typeLower === "watch_earn" ||
+    typeLower === "watch_and_earn" ||
+    typeLower === "video";
+
+
+  /*
+    Reward
+    Watch & Earn = $0.50
+    Other tasks = server reward
+  */
+
+  let reward =
+    Number(
+      task.reward || 0
+    ).toFixed(2);
+
+
+  if(isWatchEarn){
+
+    reward = "0.50";
+
+  }
+
+
+  const icon =
+    escapeHtml(
+      task.icon || "🎯"
+    );
+
+
   const title =
-    escapeHtml(titleRaw);
+    escapeHtml(
+      titleRaw
+    );
+
 
   const description =
     escapeHtml(
@@ -3837,48 +3889,24 @@ if(isWatchEarn){
       "Complete this task to earn a reward."
     );
 
+
   const type =
     escapeHtml(
-      String(
-        task.task_type || "task"
-      )
-      .replaceAll("_"," ")
-      .toUpperCase()
+      typeRaw
+        .replaceAll("_"," ")
+        .toUpperCase()
     );
 
 
   /*
-    Detect special tasks.
-    These tasks use their own earning system
-    instead of the normal /api/tasks/:id/start
+    Button action
   */
-
-  const titleLower =
-    titleRaw.toLowerCase();
-
-  const typeLower =
-    String(
-      task.task_type || ""
-    ).toLowerCase();
-
-
-  const isGameOffer =
-    titleLower.includes("game offer") ||
-    titleLower.includes("game offers") ||
-    typeLower.includes("game_offer") ||
-    typeLower.includes("adgem");
-
-
-  const isWatchEarn =
-    titleLower.includes("watch & earn") ||
-    titleLower.includes("watch and earn") ||
-    titleLower.includes("watch video") ||
-    typeLower.includes("watch") ||
-    typeLower.includes("video");
-
 
   let buttonAction =
     `startTask(${task.id})`;
+
+  let buttonText =
+    "Start";
 
 
   if(isGameOffer){
@@ -3886,10 +3914,16 @@ if(isWatchEarn){
     buttonAction =
       "openAdGemOffers()";
 
+    buttonText =
+      "Game Offer";
+
   }else if(isWatchEarn){
 
     buttonAction =
       "watchMonetag()";
+
+    buttonText =
+      "Watch";
 
   }
 
@@ -3906,6 +3940,7 @@ if(isWatchEarn){
         <div class="taskIcon">
           ${icon}
         </div>
+
 
         <div class="taskReward">
           +$${reward}
@@ -3936,13 +3971,7 @@ if(isWatchEarn){
           id="task-btn-${task.id}"
           onclick="${buttonAction}">
 
-          ${
-            isGameOffer
-              ? "Game Offer"
-              : isWatchEarn
-                ? "Watch"
-                : "Start"
-          }
+          ${buttonText}
 
         </button>
 
