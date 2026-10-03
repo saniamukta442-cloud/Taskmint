@@ -810,31 +810,6 @@
     }
 
     /* =========================
-       ACTIVITY
-    ========================= */
-
-    .activity{
-      display:grid;
-      gap:9px;
-    }
-
-    .activity div{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      border-bottom:1px solid var(--line);
-      padding:10px 0;
-    }
-
-    .positive{
-      color:var(--green);
-    }
-
-    .negative{
-      color:var(--red);
-    }
-
-    /* =========================
        NOTICE
     ========================= */
 
@@ -988,7 +963,6 @@
       }
 
       /*
-        IMPORTANT:
         Monetag + GigaPub stay on one line
         even on mobile.
       */
@@ -1005,6 +979,7 @@
         border-radius:14px;
       }
 
+    }
 
   </style>
 
@@ -1220,7 +1195,7 @@
       </span>
 
       <b>
-        $5.00
+        $2.50
       </b>
 
     </div>
@@ -1307,7 +1282,7 @@
         </p>
 
         <div class="earn">
-          +$5.00 / referral
+          +$2.50 / referral
         </div>
 
       </article>
@@ -1402,13 +1377,13 @@
       <div>
 
         <h2>
-          Invite friends. Earn $5.
+          Invite friends. Earn $2.50.
         </h2>
 
         <p>
           Share your referral code with friends.
           A successful referred registration can earn
-          you $5.
+          you $2.50.
         </p>
 
       </div>
@@ -1617,34 +1592,36 @@
 
   <!-- =================================================
      ADSTERRA BANNER
-================================================= -->
+  ================================================== -->
 
-<div
-  class="dashCard"
-  style="
-    margin-top:15px;
-    text-align:center;
-  ">
+  <div
+    class="dashCard"
+    style="
+      margin-top:15px;
+      text-align:center;
+    ">
 
-  <div class="muted" style="margin-bottom:10px;">
-    Advertisement
+    <div
+      class="muted"
+      style="margin-bottom:10px;">
+      Advertisement
+    </div>
+
+    <script>
+      atOptions = {
+        'key' : '5f2ac2383529b79c211cc5be2acfdcd5',
+        'format' : 'iframe',
+        'height' : 50,
+        'width' : 320,
+        'params' : {}
+      };
+    </script>
+
+    <script
+      src="https://www.highrevenueformat.com/5f2ac2383529b79c211cc5be2acfdcd5/invoke.js">
+    </script>
+
   </div>
-
-  <script>
-    atOptions = {
-      'key' : '5f2ac2383529b79c211cc5be2acfdcd5',
-      'format' : 'iframe',
-      'height' : 50,
-      'width' : 320,
-      'params' : {}
-    };
-  </script>
-
-  <script
-    src="https://www.highrevenueformat.com/5f2ac2383529b79c211cc5be2acfdcd5/invoke.js">
-  </script>
-
-</div>
 
 
   <!-- =================================================
@@ -1828,17 +1805,6 @@
       Request withdrawal
 
     </button>
-
-  </div>
-
-
-  <!-- =================================================
-       ACTIVITY
-  ================================================== -->
-
-  <div
-    class="dashCard"
-    style="margin-top:15px">
 
   </div>
 
@@ -2503,8 +2469,6 @@ async function loadDashboard(){
     );
 
 
-    await loadActivity();
-
     await loadDailyBonusStatus();
 
     await loadAdStatus();
@@ -2679,14 +2643,6 @@ function makeReferralLink(
   referralCode
 ){
 
-  /*
-    Example:
-    https://taskmint.onrender.com/?ref=AB12CD
-
-    The current domain is automatically used,
-    so no hardcoded domain is required.
-  */
-
   return (
     `${window.location.origin}/?ref=` +
     encodeURIComponent(
@@ -2814,106 +2770,6 @@ if(
     "taskmint_referral",
     referralFromURL
   );
-
-}
-
-
-/* =====================================================
-   ACTIVITY
-===================================================== */
-
-async function loadActivity(){
-
-  try{
-
-    const r =
-      await fetch(
-        "/api/activity",
-        {
-          headers:{
-            Authorization:
-              "Bearer " + token
-          }
-        }
-      );
-
-
-    const d =
-      await r.json();
-
-
-    if(
-      d.items &&
-      d.items.length
-    ){
-
-      $("activity").innerHTML =
-        d.items
-          .map(
-            x => {
-
-              const amount =
-                Number(
-                  x.amount
-                );
-
-
-              const positive =
-                amount >= 0;
-
-
-              return `
-
-                <div>
-
-                  <span>
-                    ${escapeHtml(
-                      x.description ||
-                      x.type
-                    )}
-                  </span>
-
-                  <b class="${
-                    positive
-                      ? "positive"
-                      : "negative"
-                  }">
-
-                    ${
-                      positive
-                        ? "+"
-                        : "-"
-                    }${
-                      Math.abs(
-                        amount
-                      ).toFixed(2)
-                    }
-
-                  </b>
-
-                </div>
-
-              `;
-
-            }
-          )
-          .join("");
-
-
-    }else{
-
-      $("activity").innerHTML =
-        "<span class='muted'>No activity yet.</span>";
-
-    }
-
-
-  }catch(e){
-
-    $("activity").innerHTML =
-      "<span class='error'>Could not load activity.</span>";
-
-  }
 
 }
 
@@ -3066,9 +2922,6 @@ async function claimDailyBonus(){
     );
 
 
-    await loadActivity();
-
-
   }catch(e){
 
     $("bonusBtn").disabled =
@@ -3215,11 +3068,6 @@ function updateAdUI(
     $("gigapubBtn").disabled =
       false;
 
-
-    /*
-      Both buttons intentionally
-      contain only "Video".
-    */
 
     $("monetagBtn").textContent =
       "Video";
@@ -3405,9 +3253,6 @@ async function watchMonetag(){
     );
 
 
-    await loadActivity();
-
-
   }catch(e){
 
     $("adNotice").innerHTML =
@@ -3546,9 +3391,6 @@ async function watchGigaPub(){
       reward.limit,
       reward.remaining
     );
-
-
-    await loadActivity();
 
 
   }catch(e){
@@ -3849,10 +3691,6 @@ function renderTask(task){
     typeRaw.toLowerCase();
 
 
-  /*
-    Detect special tasks
-  */
-
   const isGameOffer =
     titleLower.includes("game offer") ||
     titleLower.includes("game offers") ||
@@ -3869,12 +3707,6 @@ function renderTask(task){
     typeLower === "watch_and_earn" ||
     typeLower === "video";
 
-
-  /*
-    Reward
-    Watch & Earn = $0.50
-    Other tasks = server reward
-  */
 
   let reward =
     Number(
@@ -3915,10 +3747,6 @@ function renderTask(task){
         .toUpperCase()
     );
 
-
-  /*
-    Button action
-  */
 
   let buttonAction =
     `startTask(${task.id})`;
@@ -4007,6 +3835,7 @@ function renderTask(task){
   `;
 
 }
+
 
 /* =====================================================
    START TASK
