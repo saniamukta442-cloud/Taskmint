@@ -17,6 +17,7 @@
   </script>
 
   <meta charset="utf-8">
+
   <meta
     name="viewport"
     content="width=device-width,initial-scale=1">
@@ -248,6 +249,7 @@
     .ref,
     .dashCard,
     .statCard{
+
       background:
         linear-gradient(
           145deg,
@@ -530,6 +532,85 @@
     }
 
     /* =========================
+       QUICK TASKS
+    ========================= */
+
+    .quickTasks{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-bottom:20px;
+    }
+
+    .quickTaskBtn{
+      width:100%;
+      border:1px solid var(--line);
+      background:
+        linear-gradient(
+          145deg,
+          #111d31,
+          #0a111e
+        );
+      color:#fff;
+      border-radius:16px;
+      padding:15px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      text-align:left;
+      cursor:pointer;
+      transition:
+        transform .15s ease,
+        border-color .15s ease,
+        background .15s ease;
+    }
+
+    .quickTaskBtn:hover{
+      transform:translateY(-2px);
+      border-color:#35d6ff55;
+      background:#ffffff08;
+    }
+
+    .quickTaskBtn:active{
+      transform:scale(.98);
+    }
+
+    .quickTaskIcon{
+      width:46px;
+      height:46px;
+      flex:0 0 46px;
+      border-radius:13px;
+      display:grid;
+      place-items:center;
+      background:#35d6ff12;
+      font-size:23px;
+    }
+
+    .quickTaskText{
+      min-width:0;
+      flex:1;
+    }
+
+    .quickTaskText b{
+      display:block;
+      font-size:15px;
+      margin-bottom:3px;
+    }
+
+    .quickTaskText small{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+
+    .quickTaskArrow{
+      font-size:20px;
+      color:var(--cyan);
+      font-weight:900;
+    }
+
+    /* =========================
        TASKS
     ========================= */
 
@@ -703,8 +784,15 @@
       font-weight:900;
     }
 
+    .adButtons{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+      margin-top:18px;
+    }
+
     .adButton{
-      flex:1;
+      width:100%;
       border:0;
       border-radius:18px;
       padding:16px 12px;
@@ -718,16 +806,14 @@
         );
 
       color:#06111f;
-      font-size:18px;
+      font-size:20px;
       font-weight:800;
 
       cursor:pointer;
 
       display:flex;
-      flex-direction:column;
       align-items:center;
       justify-content:center;
-      gap:4px;
 
       box-shadow:
         0 8px 25px rgba(34,211,238,.18);
@@ -735,11 +821,6 @@
       transition:
         transform .15s ease,
         box-shadow .15s ease;
-    }
-
-    .adButton span{
-      font-size:16px;
-      font-weight:800;
     }
 
     .adButton:hover{
@@ -948,6 +1029,7 @@
       .refDashBox{
         flex-direction:column;
       }
+
     }
 
     @media(max-width:600px){
@@ -984,18 +1066,28 @@
         padding:15px;
       }
 
-      .adButton{
-        min-height:86px;
-        font-size:16px;
-      }
-
-      .adButton span{
-        font-size:15px;
-      }
+      /*
+        IMPORTANT:
+        Monetag + GigaPub stay on one line
+        even on mobile.
+      */
 
       .adButtons{
-        grid-template-columns:1fr !important;
+        grid-template-columns:1fr 1fr;
+        gap:8px;
       }
+
+      .adButton{
+        min-height:72px;
+        padding:12px 6px;
+        font-size:17px;
+        border-radius:14px;
+      }
+
+      .quickTasks{
+        grid-template-columns:1fr;
+      }
+
     }
 
   </style>
@@ -1003,6 +1095,7 @@
 </head>
 
 <body>
+
 
 <!-- =====================================================
      HEADER
@@ -1022,6 +1115,7 @@
 
     </div>
 
+
     <div class="links">
 
       <a href="#tasks">
@@ -1037,6 +1131,7 @@
       </a>
 
     </div>
+
 
     <div class="actions">
 
@@ -1064,6 +1159,7 @@
 ===================================================== -->
 
 <main id="landing">
+
 
   <!-- HERO -->
 
@@ -1187,6 +1283,7 @@
 
     </div>
 
+
     <div class="stat">
 
       <span class="muted">
@@ -1198,6 +1295,7 @@
       </b>
 
     </div>
+
 
     <div class="stat">
 
@@ -1399,6 +1497,7 @@
 
       </div>
 
+
       <div class="refbox">
 
         <input
@@ -1446,6 +1545,7 @@
       </h1>
 
     </div>
+
 
     <button
       class="btn ghost"
@@ -1513,7 +1613,9 @@
   </div>
 
 
-  <!-- REFERRAL LINK -->
+  <!-- =================================================
+       REFERRAL LINK
+  ================================================== -->
 
   <div class="dashCard refDash">
 
@@ -1523,6 +1625,8 @@
 
     <p class="muted">
       Share this link with friends to invite them.
+      When they open the link, TaskMint will open
+      and your referral code will be remembered.
     </p>
 
     <div class="refDashBox">
@@ -1542,34 +1646,6 @@
 
   </div>
 
-  <!-- =================================================
-       ADGEM OFFERS
-  ================================================== -->
-
-  <div
-    class="dashCard"
-    style="margin-top:15px;">
-
-    <h2>
-      🎮 Game & App Offers
-    </h2>
-
-    <p class="muted">
-      Complete sponsored games and app offers to earn
-      rewards.
-    </p>
-
-    <button
-      class="btn primary"
-      onclick="openAdGemOffers()"
-      style="margin-top:10px;">
-
-      Open Offers →
-
-    </button>
-
-  </div>
-
 
   <!-- =================================================
        AVAILABLE TASKS
@@ -1578,6 +1654,7 @@
   <section
     class="dashCard taskPanel"
     id="tasksSection">
+
 
     <div class="sectionHead">
 
@@ -1597,6 +1674,7 @@
 
       </div>
 
+
       <button
         class="smallBtn"
         onclick="loadTasks()">
@@ -1605,11 +1683,73 @@
 
     </div>
 
+
+    <!-- QUICK TASK BUTTONS -->
+
+    <div class="quickTasks">
+
+      <button
+        class="quickTaskBtn"
+        onclick="openAdGemOffers()">
+
+        <span class="quickTaskIcon">
+          🎮
+        </span>
+
+        <span class="quickTaskText">
+
+          <b>
+            Game Offers
+          </b>
+
+          <small>
+            Play games & earn rewards
+          </small>
+
+        </span>
+
+        <span class="quickTaskArrow">
+          →
+        </span>
+
+      </button>
+
+
+      <button
+        class="quickTaskBtn"
+        onclick="watchMonetag()">
+
+        <span class="quickTaskIcon">
+          🎬
+        </span>
+
+        <span class="quickTaskText">
+
+          <b>
+            Watch Video
+          </b>
+
+          <small>
+            Watch a verified video & earn
+          </small>
+
+        </span>
+
+        <span class="quickTaskArrow">
+          →
+        </span>
+
+      </button>
+
+    </div>
+
+
     <div
       id="tasksLoading"
       class="taskEmpty">
       Loading tasks...
     </div>
+
 
     <div
       id="tasksList"
@@ -1620,139 +1760,186 @@
 
 
   <!-- =================================================
-       WATCH + DAILY BONUS
+       WATCH & EARN
   ================================================== -->
 
   <div
-    class="dashGrid"
-    style="
-      margin-top:15px;
-      grid-template-columns:1fr 1fr;
-    ">
+    class="dashCard"
+    style="margin-top:15px;">
+
+    <h2>
+      🎬 Watch & Earn
+    </h2>
 
 
-    <!-- WATCH -->
+    <div class="adInfo">
 
-    <div class="dashCard">
-
-      <h2>
-        🎬 Watch & Earn
-      </h2>
-
-      <div class="adInfo">
-
-        <div class="muted">
-          Today's ads
-        </div>
-
-        <div
-          id="adCounter"
-          style="
-            font-size:28px;
-            font-weight:900;
-            margin:5px 0;
-          ">
-          0 / 30
-        </div>
-
-        <div class="muted">
-
-          Each verified ad:
-
-          <span class="adReward">
-            +$0.50
-          </span>
-
-        </div>
+      <div class="muted">
+        Today's videos
+      </div>
 
 
-        <div
-          class="adButtons"
-          style="
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:12px;
-            margin-top:18px;
-          ">
-
-          <button
-            id="monetagBtn"
-            class="adButton"
-            onclick="watchMonetag()">
-
-            🟣 Monetag
-
-            <span>
-              +$0.50
-            </span>
-
-          </button>
+      <div
+        id="adCounter"
+        style="
+          font-size:28px;
+          font-weight:900;
+          margin:5px 0;
+        ">
+        0 / 30
+      </div>
 
 
-          <button
-            id="gigapubBtn"
-            class="adButton"
-            onclick="watchGigaPub()">
+      <div class="muted">
 
-            🟢 GigaPub
+        Each verified video:
 
-            <span>
-              +$0.50
-            </span>
-
-          </button>
-
-        </div>
-
-
-        <p
-          id="adNotice"
-          class="notice">
-
-          Choose an ad provider to earn $0.50.
-
-        </p>
+        <span class="adReward">
+          +$0.50
+        </span>
 
       </div>
 
-    </div>
+
+      <!-- MONETAG + GIGAPUB -->
+
+      <div class="adButtons">
+
+        <button
+          id="monetagBtn"
+          class="adButton"
+          onclick="watchMonetag()">
+
+          Video
+
+        </button>
 
 
-    <!-- DAILY BONUS -->
+        <button
+          id="gigapubBtn"
+          class="adButton"
+          onclick="watchGigaPub()">
 
-    <div
-      class="dashCard bonusCard">
+          Video
 
-      <h2>
-        🎁 Daily Bonus
-      </h2>
+        </button>
 
-      <div class="bonusAmount">
-        +$1.00
       </div>
 
-      <p class="muted">
-        Claim once every day.
-      </p>
-
-      <button
-        class="btn primary"
-        id="bonusBtn"
-        onclick="claimDailyBonus()">
-
-        Claim $1.00
-
-      </button>
 
       <p
-        id="bonusNotice"
+        id="adNotice"
         class="notice">
 
-        Checking bonus...
+        Choose a video to earn $0.50.
 
       </p>
 
     </div>
+
+  </div>
+
+
+  <!-- =================================================
+       DAILY BONUS
+  ================================================== -->
+
+  <div
+    class="dashCard bonusCard"
+    style="margin-top:15px;">
+
+    <h2>
+      🎁 Daily Bonus
+    </h2>
+
+    <div class="bonusAmount">
+      +$1.00
+    </div>
+
+    <p class="muted">
+      Claim once every day.
+    </p>
+
+    <button
+      class="btn primary"
+      id="bonusBtn"
+      onclick="claimDailyBonus()">
+
+      Claim $1.00
+
+    </button>
+
+    <p
+      id="bonusNotice"
+      class="notice">
+
+      Checking bonus...
+
+    </p>
+
+  </div>
+
+
+  <!-- =================================================
+       WITHDRAW
+  ================================================== -->
+
+  <div
+    class="dashCard"
+    style="margin-top:15px;">
+
+    <h2>
+      💸 Withdraw
+    </h2>
+
+    <p class="muted">
+
+      Minimum withdrawal:
+
+      <b style="color:white">
+        $50.00
+      </b>
+
+    </p>
+
+
+    <div class="rewardBox">
+
+      <div class="rewardRow">
+
+        <span>
+          Minimum
+        </span>
+
+        <b>
+          $50.00
+        </b>
+
+      </div>
+
+
+      <div class="rewardRow">
+
+        <span>
+          Methods
+        </span>
+
+        <b>
+          bKash / Nagad
+        </b>
+
+      </div>
+
+    </div>
+
+
+    <button
+      class="btn primary"
+      onclick="openWithdraw()">
+
+      Request withdrawal
+
+    </button>
 
   </div>
 
@@ -1781,67 +1968,6 @@
 
   </div>
 
-
-  <!-- =================================================
-       WITHDRAW
-  ================================================== -->
-
-  <div
-    class="dashCard"
-    style="margin-top:15px">
-
-    <h2>
-      💸 Withdraw
-    </h2>
-
-    <p class="muted">
-
-      Minimum withdrawal:
-
-      <b style="color:white">
-        $50.00
-      </b>
-
-    </p>
-
-    <div class="rewardBox">
-
-      <div class="rewardRow">
-
-        <span>
-          Minimum
-        </span>
-
-        <b>
-          $50.00
-        </b>
-
-      </div>
-
-      <div class="rewardRow">
-
-        <span>
-          Methods
-        </span>
-
-        <b>
-          bKash / Nagad
-        </b>
-
-      </div>
-
-    </div>
-
-    <button
-      class="btn primary"
-      onclick="openWithdraw()">
-
-      Request withdrawal
-
-    </button>
-
-  </div>
-
 </section>
 
 
@@ -1860,6 +1986,7 @@
       onclick="closeModal('authModal')">
       ×
     </button>
+
 
     <h2 id="authTitle">
       Create account
@@ -1948,9 +2075,11 @@
       ×
     </button>
 
+
     <h2>
       Request withdrawal
     </h2>
+
 
     <p class="muted">
       Minimum withdrawal: $50.00
@@ -2040,10 +2169,12 @@
 
 let authMode = "register";
 
+
 let token =
   localStorage.getItem(
     "taskmint_token"
   );
+
 
 const $ = id =>
   document.getElementById(id);
@@ -2053,69 +2184,96 @@ const $ = id =>
    GENERAL NOTICE
 ===================================================== */
 
-function showNotice(message,type=""){
+function showNotice(
+  message,
+  type=""
+){
 
   const old =
-    document.querySelector(".globalNotice");
+    document.querySelector(
+      ".globalNotice"
+    );
+
 
   if(old){
     old.remove();
   }
 
+
   const notice =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
+
 
   notice.className =
     "globalNotice";
 
+
   notice.textContent =
     message;
+
 
   notice.style.position =
     "fixed";
 
+
   notice.style.left =
     "50%";
+
 
   notice.style.bottom =
     "22px";
 
+
   notice.style.transform =
     "translateX(-50%)";
+
 
   notice.style.zIndex =
     "100";
 
+
   notice.style.padding =
     "12px 16px";
+
 
   notice.style.borderRadius =
     "12px";
 
+
   notice.style.background =
     "#101b2d";
 
+
   notice.style.border =
     "1px solid var(--line)";
+
 
   notice.style.color =
     type === "error"
       ? "var(--red)"
       : "var(--green)";
 
+
   notice.style.fontSize =
     "13px";
 
+
   notice.style.fontWeight =
     "700";
+
 
   document.body.appendChild(
     notice
   );
 
+
   setTimeout(() => {
 
-    notice.remove();
+    if(notice){
+      notice.remove();
+    }
 
   },3000);
 
@@ -2126,38 +2284,47 @@ function showNotice(message,type=""){
    AUTH
 ===================================================== */
 
-function openAuth(mode){
+function openAuth(
+  mode
+){
 
   authMode =
     mode;
+
 
   $("authTitle").textContent =
     mode === "register"
       ? "Create account"
       : "Welcome back";
 
+
   $("authBtn").textContent =
     mode === "register"
       ? "Create account"
       : "Log in";
+
 
   $("nameWrap").style.display =
     mode === "register"
       ? "block"
       : "none";
 
+
   $("refCode").style.display =
     mode === "register"
       ? "block"
       : "none";
+
 
   $("switchBtn").textContent =
     mode === "register"
       ? "Already have an account? Log in"
       : "Need an account? Create one";
 
+
   $("authNotice").textContent =
     "";
+
 
   $("authModal").style.display =
     "flex";
@@ -2176,14 +2343,19 @@ function toggleAuth(){
 }
 
 
-function closeModal(id){
+function closeModal(
+  id
+){
 
   const modal =
     $(id);
 
+
   if(modal){
+
     modal.style.display =
       "none";
+
   }
 
 }
@@ -2219,10 +2391,15 @@ async function submitAuth(){
   const email =
     $("email").value.trim();
 
+
   const password =
     $("password").value;
 
-  if(!email || !password){
+
+  if(
+    !email ||
+    !password
+  ){
 
     $("authNotice").textContent =
       "❌ Email and password are required.";
@@ -2240,12 +2417,17 @@ async function submitAuth(){
   };
 
 
-  if(authMode === "register"){
+  if(
+    authMode === "register"
+  ){
 
     payload.displayName =
       $("name").value.trim();
 
-    if(!payload.displayName){
+
+    if(
+      !payload.displayName
+    ){
 
       $("authNotice").textContent =
         "❌ Please enter your name.";
@@ -2292,7 +2474,9 @@ async function submitAuth(){
           },
 
           body:
-            JSON.stringify(payload)
+            JSON.stringify(
+              payload
+            )
 
         }
       );
@@ -2302,7 +2486,10 @@ async function submitAuth(){
       await r.json();
 
 
-    if(!r.ok || !d.ok){
+    if(
+      !r.ok ||
+      !d.ok
+    ){
 
       throw new Error(
         d.error ||
@@ -2322,7 +2509,9 @@ async function submitAuth(){
     );
 
 
-    if(authMode === "register"){
+    if(
+      authMode === "register"
+    ){
 
       localStorage.removeItem(
         "taskmint_referral"
@@ -2400,12 +2589,14 @@ async function loadDashboard(){
       .querySelectorAll(
         ".stats,.section"
       )
-      .forEach(x => {
+      .forEach(
+        x => {
 
-        x.style.display =
-          "none";
+          x.style.display =
+            "none";
 
-      });
+        }
+      );
 
 
     $("dashboard").style.display =
@@ -2480,9 +2671,11 @@ function setMoney(
   const element =
     $(id);
 
+
   if(!element){
     return;
   }
+
 
   element.textContent =
     "$" +
@@ -2494,12 +2687,131 @@ function setMoney(
 
 
 /* =====================================================
+   REFERRAL CODE
+===================================================== */
+
+function setReferralCode(
+  referralCode
+){
+
+  const element =
+    $("dashReferral");
+
+
+  if(!element){
+    return;
+  }
+
+
+  element.textContent =
+    referralCode ||
+    "—";
+
+}
+
+
+/* =====================================================
+   COPY REFERRAL CODE
+===================================================== */
+
+async function copyReferralCode(){
+
+  const element =
+    $("dashReferral");
+
+
+  if(
+    !element
+  ){
+    return;
+  }
+
+
+  const code =
+    element.textContent.trim();
+
+
+  if(
+    !code ||
+    code === "—"
+  ){
+
+    showNotice(
+      "Referral code is not available.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  try{
+
+    await navigator.clipboard.writeText(
+      code
+    );
+
+
+    showNotice(
+      "Referral code copied.",
+      "success"
+    );
+
+
+  }catch{
+
+    const temp =
+      document.createElement(
+        "textarea"
+      );
+
+
+    temp.value =
+      code;
+
+
+    document.body.appendChild(
+      temp
+    );
+
+
+    temp.select();
+
+
+    document.execCommand(
+      "copy"
+    );
+
+
+    temp.remove();
+
+
+    showNotice(
+      "Referral code copied.",
+      "success"
+    );
+
+  }
+
+}
+
+
+/* =====================================================
    REFERRAL LINK
 ===================================================== */
 
 function makeReferralLink(
   referralCode
 ){
+
+  /*
+    Example:
+    https://taskmint.onrender.com/?ref=AB12CD
+
+    The current domain is automatically used,
+    so no hardcoded domain is required.
+  */
 
   return (
     `${window.location.origin}/?ref=` +
@@ -2518,6 +2830,7 @@ function setReferralLink(
   const input =
     $("referralLink");
 
+
   if(
     !input ||
     !referralCode
@@ -2526,6 +2839,7 @@ function setReferralLink(
     return;
 
   }
+
 
   input.value =
     makeReferralLink(
@@ -2540,10 +2854,16 @@ async function copyReferralLink(){
   const input =
     $("referralLink");
 
+
   if(
     !input ||
     !input.value
   ){
+
+    showNotice(
+      "Referral link is not available.",
+      "error"
+    );
 
     return;
 
@@ -2556,18 +2876,24 @@ async function copyReferralLink(){
       input.value
     );
 
+
     showNotice(
       "Referral link copied.",
       "success"
     );
 
+
   }catch{
 
+    input.focus();
+
     input.select();
+
 
     document.execCommand(
       "copy"
     );
+
 
     showNotice(
       "Referral link copied.",
@@ -2590,6 +2916,7 @@ function getReferralCodeFromURL(){
       window.location.search
     );
 
+
   return (
     params
       .get("ref") ||
@@ -2605,7 +2932,9 @@ const referralFromURL =
   getReferralCodeFromURL();
 
 
-if(referralFromURL){
+if(
+  referralFromURL
+){
 
   localStorage.setItem(
     "taskmint_referral",
@@ -2646,51 +2975,54 @@ async function loadActivity(){
 
       $("activity").innerHTML =
         d.items
-          .map(x => {
+          .map(
+            x => {
 
-            const amount =
-              Number(
-                x.amount
-              );
-
-            const positive =
-              amount >= 0;
+              const amount =
+                Number(
+                  x.amount
+                );
 
 
-            return `
+              const positive =
+                amount >= 0;
 
-              <div>
 
-                <span>
-                  ${escapeHtml(
-                    x.description ||
-                    x.type
-                  )}
-                </span>
+              return `
 
-                <b class="${
-                  positive
-                    ? "positive"
-                    : "negative"
-                }">
+                <div>
 
-                  ${
+                  <span>
+                    ${escapeHtml(
+                      x.description ||
+                      x.type
+                    )}
+                  </span>
+
+                  <b class="${
                     positive
-                      ? "+"
-                      : "-"
-                  }${
-                    Math.abs(
-                      amount
-                    ).toFixed(2)
-                  }
+                      ? "positive"
+                      : "negative"
+                  }">
 
-                </b>
+                    ${
+                      positive
+                        ? "+"
+                        : "-"
+                    }${
+                      Math.abs(
+                        amount
+                      ).toFixed(2)
+                    }
 
-              </div>
+                  </b>
 
-            `;
+                </div>
 
-          })
+              `;
+
+            }
+          )
           .join("");
 
 
@@ -2744,8 +3076,10 @@ async function loadDailyBonusStatus(){
       $("bonusBtn").disabled =
         true;
 
+
       $("bonusBtn").textContent =
         "Claimed Today";
+
 
       $("bonusNotice").innerHTML =
         "<span class='success'>✓ You already claimed today's $1.00 bonus.</span>";
@@ -2756,8 +3090,10 @@ async function loadDailyBonusStatus(){
       $("bonusBtn").disabled =
         false;
 
+
       $("bonusBtn").textContent =
         "Claim $1.00";
+
 
       $("bonusNotice").textContent =
         "Your $1.00 daily bonus is ready.";
@@ -2789,8 +3125,10 @@ async function claimDailyBonus(){
   $("bonusBtn").disabled =
     true;
 
+
   $("bonusBtn").textContent =
     "Claiming...";
+
 
   $("bonusNotice").textContent =
     "Please wait...";
@@ -2862,6 +3200,7 @@ async function claimDailyBonus(){
     $("bonusBtn").disabled =
       false;
 
+
     $("bonusBtn").textContent =
       "Claim $1.00";
 
@@ -2930,7 +3269,9 @@ async function loadAdStatus(){
 
   }catch(e){
 
-    if($("adNotice")){
+    if(
+      $("adNotice")
+    ){
 
       $("adNotice").textContent =
         "Could not load ad limit.";
@@ -2972,16 +3313,17 @@ function updateAdUI(
     $("monetagBtn").disabled =
       true;
 
+
     $("gigapubBtn").disabled =
       true;
 
 
-    $("monetagBtn").innerHTML =
-      "🟣 Limit Reached";
+    $("monetagBtn").textContent =
+      "Limit Reached";
 
 
-    $("gigapubBtn").innerHTML =
-      "🟢 Limit Reached";
+    $("gigapubBtn").textContent =
+      "Limit Reached";
 
 
     $("adNotice").innerHTML =
@@ -2995,16 +3337,22 @@ function updateAdUI(
     $("monetagBtn").disabled =
       false;
 
+
     $("gigapubBtn").disabled =
       false;
 
 
-    $("monetagBtn").innerHTML =
-      "🟣 Monetag<br>+$0.50";
+    /*
+      Both buttons intentionally
+      contain only "Video".
+    */
+
+    $("monetagBtn").textContent =
+      "Video";
 
 
-    $("gigapubBtn").innerHTML =
-      "🟢 GigaPub<br>+$0.50";
+    $("gigapubBtn").textContent =
+      "Video";
 
   }
 
@@ -3068,6 +3416,15 @@ async function creditAdReward(
 
 async function watchMonetag(){
 
+  if(!token){
+
+    openAuth("login");
+
+    return;
+
+  }
+
+
   if(adBusy){
     return;
   }
@@ -3080,12 +3437,13 @@ async function watchMonetag(){
   $("monetagBtn").disabled =
     true;
 
+
   $("gigapubBtn").disabled =
     true;
 
 
   $("adNotice").textContent =
-    "Loading Monetag ad...";
+    "Loading video...";
 
 
   try{
@@ -3128,14 +3486,14 @@ async function watchMonetag(){
     ){
 
       throw new Error(
-        "Monetag ad is not ready yet. Please try again."
+        "Video is not ready yet. Please try again."
       );
 
     }
 
 
     $("adNotice").textContent =
-      "Please complete the Monetag ad...";
+      "Please complete the video...";
 
 
     await fn();
@@ -3161,7 +3519,7 @@ async function watchMonetag(){
 
     $("adNotice").innerHTML =
       `<span class="success">
-        ✓ Monetag ad completed.
+        ✓ Video completed.
         +$0.50 added.
       </span>`;
 
@@ -3191,6 +3549,7 @@ async function watchMonetag(){
     adBusy =
       false;
 
+
     await loadAdStatus();
 
   }
@@ -3204,6 +3563,15 @@ async function watchMonetag(){
 
 async function watchGigaPub(){
 
+  if(!token){
+
+    openAuth("login");
+
+    return;
+
+  }
+
+
   if(adBusy){
     return;
   }
@@ -3216,12 +3584,13 @@ async function watchGigaPub(){
   $("monetagBtn").disabled =
     true;
 
+
   $("gigapubBtn").disabled =
     true;
 
 
   $("adNotice").textContent =
-    "Loading GigaPub ad...";
+    "Loading video...";
 
 
   try{
@@ -3260,14 +3629,14 @@ async function watchGigaPub(){
     ){
 
       throw new Error(
-        "GigaPub ad is not ready yet. Please try again."
+        "Video is not ready yet. Please try again."
       );
 
     }
 
 
     $("adNotice").textContent =
-      "Please complete the GigaPub ad...";
+      "Please complete the video...";
 
 
     await window.showGiga();
@@ -3293,7 +3662,7 @@ async function watchGigaPub(){
 
     $("adNotice").innerHTML =
       `<span class="success">
-        ✓ GigaPub ad completed.
+        ✓ Video completed.
         +$0.50 added.
       </span>`;
 
@@ -3323,13 +3692,15 @@ async function watchGigaPub(){
     adBusy =
       false;
 
+
     await loadAdStatus();
 
   }
 
 }
 
-  /* =====================================================
+
+/* =====================================================
    ADGEM OFFERWALL
 ===================================================== */
 
@@ -3337,11 +3708,14 @@ async function openAdGemOffers(){
 
   if(!token){
 
-    openAuth("login");
+    openAuth(
+      "login"
+    );
 
     return;
 
   }
+
 
   try{
 
@@ -3411,6 +3785,7 @@ async function loadTasks(){
   const list =
     $("tasksList");
 
+
   const loading =
     $("tasksLoading");
 
@@ -3428,6 +3803,7 @@ async function loadTasks(){
 
     loading.style.display =
       "block";
+
 
     loading.textContent =
       "Loading tasks...";
@@ -3463,6 +3839,7 @@ async function loadTasks(){
       ){
 
         logout();
+
         return;
 
       }
@@ -3523,7 +3900,9 @@ async function loadTasks(){
       data.tasks
         .map(
           task =>
-            renderTask(task)
+            renderTask(
+              task
+            )
         )
         .join("");
 
@@ -3707,6 +4086,7 @@ async function startTask(
     button.disabled =
       true;
 
+
     button.textContent =
       "Starting...";
 
@@ -3754,6 +4134,7 @@ async function startTask(
       button.disabled =
         true;
 
+
       button.textContent =
         "Pending";
 
@@ -3797,6 +4178,7 @@ async function startTask(
 
       button.disabled =
         false;
+
 
       button.textContent =
         "Start";
@@ -3898,6 +4280,7 @@ async function loadMyTasks(){
           button.disabled =
             true;
 
+
           button.textContent =
             "Completed";
 
@@ -3926,6 +4309,7 @@ async function loadMyTasks(){
           button.disabled =
             true;
 
+
           button.textContent =
             "Pending";
 
@@ -3952,6 +4336,7 @@ async function loadMyTasks(){
 
           button.disabled =
             false;
+
 
           button.textContent =
             "Start Again";
@@ -3999,6 +4384,7 @@ function openWithdraw(){
     .style.display =
     "flex";
 
+
   $("wNotice")
     .textContent =
     "";
@@ -4011,11 +4397,14 @@ async function submitWithdraw(){
   const amount =
     $("wAmount").value;
 
+
   const method =
     $("wMethod").value;
 
+
   const accountNumber =
     $("wNumber").value.trim();
+
 
   const accountName =
     $("wName").value.trim();
@@ -4031,6 +4420,7 @@ async function submitWithdraw(){
       `<span class="error">
         ❌ Please complete all fields.
       </span>`;
+
 
     return;
 
@@ -4107,8 +4497,10 @@ async function submitWithdraw(){
     $("wAmount").value =
       "";
 
+
     $("wNumber").value =
       "";
+
 
     $("wName").value =
       "";
@@ -4141,8 +4533,10 @@ function logout(){
     "taskmint_token"
   );
 
+
   token =
     null;
+
 
   location.reload();
 
