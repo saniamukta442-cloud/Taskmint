@@ -532,85 +532,6 @@
     }
 
     /* =========================
-       QUICK TASKS
-    ========================= */
-
-    .quickTasks{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:12px;
-      margin-bottom:20px;
-    }
-
-    .quickTaskBtn{
-      width:100%;
-      border:1px solid var(--line);
-      background:
-        linear-gradient(
-          145deg,
-          #111d31,
-          #0a111e
-        );
-      color:#fff;
-      border-radius:16px;
-      padding:15px;
-      display:flex;
-      align-items:center;
-      gap:12px;
-      text-align:left;
-      cursor:pointer;
-      transition:
-        transform .15s ease,
-        border-color .15s ease,
-        background .15s ease;
-    }
-
-    .quickTaskBtn:hover{
-      transform:translateY(-2px);
-      border-color:#35d6ff55;
-      background:#ffffff08;
-    }
-
-    .quickTaskBtn:active{
-      transform:scale(.98);
-    }
-
-    .quickTaskIcon{
-      width:46px;
-      height:46px;
-      flex:0 0 46px;
-      border-radius:13px;
-      display:grid;
-      place-items:center;
-      background:#35d6ff12;
-      font-size:23px;
-    }
-
-    .quickTaskText{
-      min-width:0;
-      flex:1;
-    }
-
-    .quickTaskText b{
-      display:block;
-      font-size:15px;
-      margin-bottom:3px;
-    }
-
-    .quickTaskText small{
-      display:block;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.4;
-    }
-
-    .quickTaskArrow{
-      font-size:20px;
-      color:var(--cyan);
-      font-weight:900;
-    }
-
-    /* =========================
        TASKS
     ========================= */
 
@@ -1084,11 +1005,6 @@
         border-radius:14px;
       }
 
-      .quickTasks{
-        grid-template-columns:1fr;
-      }
-
-    }
 
   </style>
 
@@ -1679,66 +1595,6 @@
         class="smallBtn"
         onclick="loadTasks()">
         Refresh
-      </button>
-
-    </div>
-
-
-    <!-- QUICK TASK BUTTONS -->
-
-    <div class="quickTasks">
-
-      <button
-        class="quickTaskBtn"
-        onclick="openAdGemOffers()">
-
-        <span class="quickTaskIcon">
-          🎮
-        </span>
-
-        <span class="quickTaskText">
-
-          <b>
-            Game Offers
-          </b>
-
-          <small>
-            Play games & earn rewards
-          </small>
-
-        </span>
-
-        <span class="quickTaskArrow">
-          →
-        </span>
-
-      </button>
-
-
-      <button
-        class="quickTaskBtn"
-        onclick="watchMonetag()">
-
-        <span class="quickTaskIcon">
-          🎬
-        </span>
-
-        <span class="quickTaskText">
-
-          <b>
-            Watch Video
-          </b>
-
-          <small>
-            Watch a verified video & earn
-          </small>
-
-        </span>
-
-        <span class="quickTaskArrow">
-          →
-        </span>
-
       </button>
 
     </div>
@@ -3954,29 +3810,23 @@ async function loadTasks(){
 
 /* Render individual task */
 
-function renderTask(
-  task
-){
+function renderTask(task){
 
   const reward =
-    Number(
-      task.reward || 0
-    ).toFixed(2);
-
+    Number(task.reward || 0).toFixed(2);
 
   const icon =
     escapeHtml(
-      task.icon ||
-      "🎯"
+      task.icon || "🎯"
     );
 
+  const titleRaw =
+    String(
+      task.title || "Task"
+    ).trim();
 
   const title =
-    escapeHtml(
-      task.title ||
-      "Task"
-    );
-
+    escapeHtml(titleRaw);
 
   const description =
     escapeHtml(
@@ -3984,19 +3834,61 @@ function renderTask(
       "Complete this task to earn a reward."
     );
 
-
   const type =
     escapeHtml(
       String(
-        task.task_type ||
-        "task"
+        task.task_type || "task"
       )
-      .replaceAll(
-        "_",
-        " "
-      )
+      .replaceAll("_"," ")
       .toUpperCase()
     );
+
+
+  /*
+    Detect special tasks.
+    These tasks use their own earning system
+    instead of the normal /api/tasks/:id/start
+  */
+
+  const titleLower =
+    titleRaw.toLowerCase();
+
+  const typeLower =
+    String(
+      task.task_type || ""
+    ).toLowerCase();
+
+
+  const isGameOffer =
+    titleLower.includes("game offer") ||
+    titleLower.includes("game offers") ||
+    typeLower.includes("game_offer") ||
+    typeLower.includes("adgem");
+
+
+  const isWatchEarn =
+    titleLower.includes("watch & earn") ||
+    titleLower.includes("watch and earn") ||
+    titleLower.includes("watch video") ||
+    typeLower.includes("watch") ||
+    typeLower.includes("video");
+
+
+  let buttonAction =
+    `startTask(${task.id})`;
+
+
+  if(isGameOffer){
+
+    buttonAction =
+      "openAdGemOffers()";
+
+  }else if(isWatchEarn){
+
+    buttonAction =
+      "watchMonetag()";
+
+  }
 
 
   return `
@@ -4039,9 +3931,15 @@ function renderTask(
         <button
           class="taskStartBtn"
           id="task-btn-${task.id}"
-          onclick="startTask(${task.id})">
+          onclick="${buttonAction}">
 
-          Start
+          ${
+            isGameOffer
+              ? "Game Offer"
+              : isWatchEarn
+                ? "Watch"
+                : "Start"
+          }
 
         </button>
 
@@ -4059,7 +3957,6 @@ function renderTask(
   `;
 
 }
-
 
 /* =====================================================
    START TASK
