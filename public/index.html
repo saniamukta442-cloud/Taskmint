@@ -3812,8 +3812,11 @@ async function loadTasks(){
 
 function renderTask(task){
 
-  const reward =
-    Number(task.reward || 0).toFixed(2);
+  let reward = Number(task.reward || 0).toFixed(2);
+
+if(isWatchEarn){
+  reward = "0.50";
+}
 
   const icon =
     escapeHtml(
