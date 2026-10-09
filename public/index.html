@@ -3417,76 +3417,38 @@ async function watchGigaPub(){
 
 
 /* =====================================================
-   ADGEM OFFERWALL
+    OFFERWALL
 ===================================================== */
 
-async function openAdGemOffers(){
 
-  if(!token){
+async function openOfferwall() {
+  const token = localStorage.getItem("token");
 
-    openAuth(
-      "login"
-    );
-
+  if (!token) {
+    alert("Please log in first.");
     return;
-
   }
 
+  try {
+    const response = await fetch("/api/offerwall/url", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-  try{
+    const data = await response.json();
 
-    const response =
-      await fetch(
-        "/api/adgem/offerwall",
-        {
-          headers:{
-            Authorization:
-              "Bearer " + token
-          }
-        }
-      );
-
-
-    const data =
-      await response.json();
-
-
-    if(
-      !response.ok ||
-      !data.ok
-    ){
-
-      throw new Error(
-        data.error ||
-        "Could not open offers."
-      );
-
+    if (!response.ok || !data.ok || !data.url) {
+      alert(data.error || "Could not open Offerwall.me.");
+      return;
     }
 
-
-    window.open(
-      data.url,
-      "_blank"
-    );
-
-
-  }catch(error){
-
-    console.error(
-      "AdGem error:",
-      error
-    );
-
-
-    showNotice(
-      error.message ||
-      "Could not open AdGem offers.",
-      "error"
-    );
-
+    window.open(data.url, "_blank");
+  } catch (error) {
+    alert("Could not connect to TaskMint.");
   }
-
 }
+
 
 
 /* =====================================================
