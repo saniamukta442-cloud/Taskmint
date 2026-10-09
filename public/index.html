@@ -3421,34 +3421,60 @@ async function watchGigaPub(){
 ===================================================== */
 
 
-async function openOfferwall() {
-  const token = localStorage.getItem("token");
+async function openOfferwall(){
 
-  if (!token) {
-    alert("Please log in first.");
+  if(!token){
+
+    openAuth("login");
+
     return;
+
   }
 
-  try {
-    const response = await fetch("/api/offerwall/url", {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+  try{
 
-    const data = await response.json();
+    const response =
+      await fetch(
+        "/api/offerwall/url",
+        {
+          headers:{
+            Authorization:
+              "Bearer " + token
+          }
+        }
+      );
 
-    if (!response.ok || !data.ok || !data.url) {
-      alert(data.error || "Could not open Offerwall.me.");
-      return;
+    const data =
+      await response.json();
+
+    if(
+      !response.ok ||
+      !data.ok ||
+      !data.url
+    ){
+
+      throw new Error(
+        data.error ||
+        "Could not open Offerwall.me."
+      );
+
     }
 
-    window.open(data.url, "_blank");
-  } catch (error) {
-    alert("Could not connect to TaskMint.");
-  }
-}
+    window.open(
+      data.url,
+      "_blank"
+    );
 
+  }catch(error){
+
+    showNotice(
+      error.message,
+      "error"
+    );
+
+  }
+
+}
 
 
 /* =====================================================
@@ -3720,7 +3746,7 @@ function renderTask(task){
   if(isGameOffer){
 
     buttonAction =
-      "openAdGemOffers()";
+  "openOfferwall()";
 
     buttonText =
       "Game Offer";
