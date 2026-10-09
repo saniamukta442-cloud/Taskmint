@@ -1169,128 +1169,79 @@ app.get("/api/my-tasks", auth, async (req, res) => {
   }
 });
 
+
 /* =========================================================
-   ADGEM OFFERWALL + SERVER POSTBACK
+   OFFERWALL.ME SIGNED OFFERWALL URL
 ========================================================= */
 
+function makeOfferwallSignedUrl(userId) {
+  const publicKey =
+    process.env.OFFERWALL_PUBLIC_KEY ||
+    process.env.OFFERWALL_API_KEY;
 
-/*
-  Generate stable AdGem player ID.
+  const privateSecret =
+    process.env.OFFERWALL_PRIVATE_SECRET ||
+    process.env.OFFERWALL_SECRET_KEY;
 
-  AdGem requires:
-  - lowercase
-  - alphanumeric / hyphen / underscore
-  - max 255 characters
+  if (!publicKey || !privateSecret) {
+    throw new Error("Offerwall.me credentials are missing.");
+  }
 
-  Example:
-  TaskMint user ID 25
-  becomes:
-  user_25
-*/
+  const exactUserId = String(userId);
+  const expires = String(
+    Math.floor(Date.now() / 1000) + 3600
+  );
 
-function makeAdGemPlayerId(userId) {
-  return `user_${String(userId)}`
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]/g, "");
+  const message =
+    "offerwall-user-v1\n" +
+    publicKey + "\n" +
+    exactUserId + "\n" +
+    expires;
+
+  const signature = crypto
+    .createHmac("sha256", privateSecret)
+    .update(message, "utf8")
+    .digest("hex");
+
+  const url = new URL(
+    "https://offerwall.me/offerwall/" +
+    encodeURIComponent(publicKey) + "/" +
+    encodeURIComponent(exactUserId)
+  );
+
+  url.searchParams.set("identityExpires", expires);
+  url.searchParams.set("identitySignature", signature);
+
+  return url.toString();
 }
 
+app.get("/api/offerwall/url", auth, async (req, res) => {
+  try {
+    const result = await pool.query(
+      "SELECT id FROM tm_users WHERE id=$1",
+      [req.auth.userId]
+    );
 
-/*
-  Get AdGem Offerwall URL for logged-in user.
-
-  The base URL will come from:
-  ADGEM_OFFERWALL_URL
-
-  Then we add:
-  ?player_id=user_123
-*/
-
-app.get(
-  "/api/adgem/offerwall",
-  auth,
-  async (req, res) => {
-
-    try {
-
-      const baseUrl =
-        String(
-          process.env.ADGEM_OFFERWALL_URL || ""
-        ).trim();
-
-      if (!baseUrl) {
-        return res.status(503).json({
-          ok: false,
-          error:
-            "AdGem Offerwall is not configured yet."
-        });
-      }
-
-      const playerId =
-        makeAdGemPlayerId(
-          req.auth.userId
-        );
-
-      const offerwallUrl =
-        new URL(baseUrl);
-
-      offerwallUrl.searchParams.set(
-        "player_id",
-        playerId
-      );
-
-      res.json({
-        ok: true,
-        playerId,
-        url: offerwallUrl.toString()
-      });
-
-    } catch (e) {
-
-      console.error(
-        "AdGem Offerwall error:",
-        e
-      );
-
-      res.status(500).json({
+    if (!result.rows.length) {
+      return res.status(404).json({
         ok: false,
-        error:
-          "Could not create AdGem Offerwall URL."
+        error: "User not found."
       });
     }
+
+    const url = makeOfferwallSignedUrl(result.rows[0].id);
+
+    return res.json({ ok: true, url });
+  } catch (e) {
+    console.error("Offerwall URL error:", e.message);
+
+    return res.status(500).json({
+      ok: false,
+      error: "Could not create Offerwall.me URL."
+    });
   }
-);
+});
 
-
-/*
-  AdGem v3 Server-to-Server Postback
-
-  AdGem sends:
-
-  POST /api/adgem/postback
-
-  Headers:
-    Signature: HMAC-SHA256(raw body)
-
-  Body:
-    {
-      request_id,
-      timestamp,
-      data: {
-        app_id,
-        player_id,
-        amount,
-        payout,
-        conversion_id,
-        ...
-      }
-    }
-*/
-
-app.post(
-  "/api/adgem/postback",
-  async (req, res) => {
-
-    try {
 
       /* ===================================================
          1. CHECK POSTBACK KEY
