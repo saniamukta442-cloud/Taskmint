@@ -1257,6 +1257,7 @@ app.post("/api/offerwall/postback", async (req, res) => {
   const reward = String(data.reward || "");
   const status = String(data.status || "1");
   const signature = String(data.signature || "");
+  console.log("Offerwall test data:", data);
   const secret = process.env.OFFERWALL_PRIVATE_SECRET;
 
   if (!secret || !userId || !transId || !reward || !signature) {
