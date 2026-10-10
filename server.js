@@ -1258,7 +1258,9 @@ app.post("/api/offerwall/postback", async (req, res) => {
   const status = String(data.status || "1");
   const signature = String(data.signature || "");
   console.log("Offerwall test data:", data);
-  const secret = process.env.OFFERWALL_PRIVATE_SECRET;
+  const secret =
+  process.env.OFFERWALL_PRIVATE_SECRET ||
+  process.env.OFFERWALL_SECRET_KEY;
 
   if (!secret || !userId || !transId || !reward || !signature) {
     return res.status(400).send("Missing parameters");
