@@ -1273,6 +1273,15 @@ app.post("/api/offerwall/postback", async (req, res) => {
 
   const a = Buffer.from(signature.toLowerCase());
   const b = Buffer.from(expected);
+  
+  console.log("Signature check:", {
+  hasSecret: Boolean(secret),
+  hasSignature: Boolean(signature),
+  hasUserId: Boolean(userId),
+  hasTransId: Boolean(transId),
+  hasReward: Boolean(reward),
+  signatureLength: signature.length
+});
 
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
     return res.status(403).send("Invalid signature");
