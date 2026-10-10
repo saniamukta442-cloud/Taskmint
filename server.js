@@ -38,6 +38,8 @@ app.use(express.json({
   }
 }));
 
+app.use(express.urlencoded({ extended: false }));
+
 app.use(express.static(path.join(__dirname, "public")));
 
 /* =========================================================
@@ -1239,6 +1241,155 @@ app.get("/api/offerwall/url", auth, async (req, res) => {
       ok: false,
       error: "Could not create Offerwall.me URL."
     });
+  }
+});
+
+
+/* =========================================================
+   OFFERWALL.ME REWARD POSTBACK
+========================================================= */
+
+app.post("/api/offerwall/postback", async (req, res) => {
+  const data = { ...req.query, ...req.body };
+
+  const userId = String(data.subId || "");
+  const transId = String(data.transId || "");
+  const reward = String(data.reward || "");
+  const status = String(data.status || "1");
+  const signature = String(data.signature || "");
+  const secret = process.env.OFFERWALL_PRIVATE_SECRET;
+
+  if (!secret || !userId || !transId || !reward || !signature) {
+    return res.status(400).send("Missing parameters");
+  }
+
+  const expected = crypto
+    .createHash("md5")
+    .update(userId + transId + reward + secret)
+    .digest("hex");
+
+  const a = Buffer.from(signature.toLowerCase());
+  const b = Buffer.from(expected);
+
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(403).send("Invalid signature");
+  }
+
+  const rewardValue = Number(data.reward_value || 1);
+  const amount = Number(reward) / rewardValue;
+
+  if (!Number.isFinite(amount) || amount <= 0 ||
+      !Number.isFinite(rewardValue) || rewardValue <= 0) {
+    return res.status(400).send("Invalid reward");
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // Avoid duplicate credits for the same Offerwall transaction.
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS tm_offerwall_transactions (
+        trans_id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        amount NUMERIC(12,2) NOT NULL,
+        status VARCHAR(20) NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    const user = await client.query(
+      "SELECT id FROM tm_users WHERE id=$1 FOR UPDATE",
+      [userId]
+    );
+
+    if (!user.rows.length) {
+      await client.query("ROLLBACK");
+      return res.status(404).send("User not found");
+    }
+
+    const old = await client.query(
+      "SELECT * FROM tm_offerwall_transactions WHERE trans_id=$1 FOR UPDATE",
+      [transId]
+    );
+
+    // A reversal/chargeback: status 2.
+    if (status === "2") {
+      if (old.rows.length && old.rows[0].status === "credited") {
+        const credited = Number(old.rows[0].amount);
+
+        await client.query(
+          `UPDATE tm_users
+           SET balance = balance - $1,
+               total_earned = GREATEST(total_earned - $1, 0)
+           WHERE id=$2`,
+          [credited, userId]
+        );
+
+        await client.query(
+          `INSERT INTO tm_transactions (user_id, type, amount, description)
+           VALUES ($1, 'offerwall_reversal', $2, $3)`,
+          [userId, -credited, `Offerwall reversal: ${transId}`]
+        );
+
+        await client.query(
+          "UPDATE tm_offerwall_transactions SET status='reversed' WHERE trans_id=$1",
+          [transId]
+        );
+      } else if (!old.rows.length) {
+        await client.query(
+          `INSERT INTO tm_offerwall_transactions (trans_id, user_id, amount, status)
+           VALUES ($1, $2, $3, 'reversed')`,
+          [transId, userId, amount]
+        );
+      }
+
+      await client.query("COMMIT");
+      return res.status(200).send("ok");
+    }
+
+    // Ignore unexpected statuses.
+    if (status !== "1") {
+      await client.query("ROLLBACK");
+      return res.status(400).send("Invalid status");
+    }
+
+    // Already processed: never credit twice.
+    if (old.rows.length) {
+      await client.query("COMMIT");
+      return res.status(200).send("ok");
+    }
+
+    await client.query(
+      `INSERT INTO tm_offerwall_transactions (trans_id, user_id, amount, status)
+       VALUES ($1, $2, $3, 'credited')`,
+      [transId, userId, amount]
+    );
+
+    await client.query(
+      `UPDATE tm_users
+       SET balance = balance + $1,
+           total_earned = total_earned + $1
+       WHERE id=$2`,
+      [amount, userId]
+    );
+
+    await client.query(
+      `INSERT INTO tm_transactions (user_id, type, amount, description)
+       VALUES ($1, 'task_reward', $2, $3)`,
+      [userId, amount, `Offerwall.me reward: ${String(data.offer_name || transId)}`]
+    );
+
+    await client.query("COMMIT");
+    return res.status(200).send("ok");
+
+  } catch (e) {
+    await client.query("ROLLBACK");
+    console.error("Offerwall postback error:", e);
+    return res.status(500).send("Server error");
+  } finally {
+    client.release();
   }
 });
 
