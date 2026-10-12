@@ -3133,6 +3133,25 @@ console.log("Offerwall transactions table ready.");
       "Database ready."
     );
 
+    app.get("/api/admin/user-ids", adminAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT id FROM tm_users ORDER BY id ASC LIMIT 20"
+    );
+
+    res.json({
+      ok: true,
+      ids: r.rows.map(x => x.id)
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      ok: false,
+      error: "Could not load user IDs"
+    });
+  }
+});
+
 
     /* =====================================================
        15. SPA FALLBACK
