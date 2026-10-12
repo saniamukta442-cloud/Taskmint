@@ -2612,6 +2612,23 @@ async function init() {
   try {
 
     console.log("Starting database initialization...");
+    
+
+    /* =====================================================
+   OFFERWALL TRANSACTIONS TABLE
+===================================================== */
+
+await pool.query(`
+  CREATE TABLE IF NOT EXISTS tm_offerwall_transactions (
+    trans_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    amount NUMERIC(12,2) NOT NULL,
+    status VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+console.log("Offerwall transactions table ready.");
 
 
     /* =====================================================
