@@ -2211,18 +2211,8 @@ async function loadDashboard(){
       "none";
 
 
-    document
-      .querySelectorAll(
-        ".stats,.section"
-      )
-      .forEach(
-        x => {
-
-          x.style.display =
-            "none";
-
-        }
-      );
+    $("landing").style.display = "none";
+$("dashboard").style.display = "block";
 
 
     $("dashboard").style.display =
