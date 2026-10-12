@@ -473,6 +473,30 @@ app.get("/api/me", auth, async (req, res) => {
   }
 });
 
+app.get("/api/my-id", auth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT id FROM tm_users WHERE id=$1",
+      [req.auth.userId]
+    );
+
+    if (!r.rows.length) {
+      return res.status(404).json({ ok: false, error: "User not found" });
+    }
+
+    res.json({
+      ok: true,
+      user_id: r.rows[0].id
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      ok: false,
+      error: "Could not get user ID"
+    });
+  }
+});
+
 
 /* =========================================================
    ACTIVITY
