@@ -1195,7 +1195,8 @@
 
   </section>
 
-
+</main>
+  
 <!-- =====================================================
      DASHBOARD
 ===================================================== -->
@@ -2207,16 +2208,8 @@ async function loadDashboard(){
       await r.json();
 
 
-    $("landing").style.display =
-      "none";
-
-
     $("landing").style.display = "none";
 $("dashboard").style.display = "block";
-
-
-    $("dashboard").style.display =
-      "block";
 
 
     $("dashName").textContent =
@@ -4120,6 +4113,10 @@ function escapeHtml(
 ===================================================== */
 
 
+
+if (token) {
+  loadDashboard();
+}
 
 </script>
 
