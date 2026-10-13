@@ -291,22 +291,30 @@ async function loadTaskCompletions(){
   }
 }
 
-async function processTask(id, action){
-  const promptText = action === "approve"
-    ? "Approve this task and credit its reward to the user?"
-    : "Reject this task completion?";
 
-  if(!confirm(promptText)) return;
+async function processTask(id, action) {
+  const buttons = document.querySelectorAll(".actions button");
+  buttons.forEach(button => button.disabled = true);
 
-  try{
-    const data = await api(`/api/admin/task-completions/${id}/${action}`,{
-      method:"POST"
-    });
-    alert(data.message || (action === "approve" ? "Task approved." : "Task rejected."));
+  try {
+    const data = await api(
+      `/api/admin/task-completions/${id}/${action}`,
+      { method: "POST" }
+    );
+
+    alert(data.message || (
+      action === "approve"
+        ? "Task approved and reward credited."
+        : "Task rejected."
+    ));
+
     await loadTaskCompletions();
     await loadWithdrawals();
-  }catch(error){
+  } catch (error) {
     alert(error.message);
+    await loadTaskCompletions();
+  } finally {
+    buttons.forEach(button => button.disabled = false);
   }
 }
 
