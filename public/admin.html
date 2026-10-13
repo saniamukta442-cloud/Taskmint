@@ -1,852 +1,398 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TaskMint Admin</title>
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>TaskMint Admin</title>
-
-  <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background:
-        radial-gradient(
-          circle at top,
-          #172554,
-          #020617 65%
-        );
-      color: white;
-      min-height: 100vh;
-    }
-
-    .container {
-      width: min(1100px, 94%);
-      margin: auto;
-      padding: 25px 0 50px;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    .logo {
-      font-size: 26px;
-      font-weight: 800;
-    }
-
-    .logo span {
-      color: #22d3ee;
-    }
-
-    .logout {
-      border: 0;
-      padding: 10px 16px;
-      border-radius: 10px;
-      background: #ef4444;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .login-box {
-      max-width: 420px;
-      margin: 80px auto;
-      padding: 30px;
-      border-radius: 20px;
-      background: rgba(15, 23, 42, .9);
-      border: 1px solid #334155;
-      box-shadow: 0 0 30px rgba(34, 211, 238, .12);
-    }
-
-    .login-box h1 {
-      text-align: center;
-      margin-top: 0;
-    }
-
-    input {
-      width: 100%;
-      padding: 14px;
-      margin-top: 12px;
-      border-radius: 10px;
-      border: 1px solid #334155;
-      background: #020617;
-      color: white;
-      outline: none;
-    }
-
-    button {
-      cursor: pointer;
-    }
-
-    .login-btn {
-      width: 100%;
-      margin-top: 18px;
-      padding: 14px;
-      border: 0;
-      border-radius: 10px;
-      background: #06b6d4;
-      color: #001018;
-      font-weight: 800;
-      font-size: 15px;
-    }
-
-    .message {
-      margin-top: 15px;
-      text-align: center;
-      color: #f87171;
-    }
-
-    .dashboard {
-      display: none;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns:
-        repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 25px;
-    }
-
-    .stat {
-      padding: 20px;
-      border-radius: 16px;
-      background: rgba(15, 23, 42, .85);
-      border: 1px solid #334155;
-    }
-
-    .stat-title {
-      color: #94a3b8;
-      font-size: 14px;
-    }
-
-    .stat-value {
-      font-size: 28px;
-      font-weight: 800;
-      margin-top: 8px;
-    }
-
-    .panel {
-      background: rgba(15, 23, 42, .88);
-      border: 1px solid #334155;
-      border-radius: 18px;
-      padding: 20px;
-      overflow-x: auto;
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .refresh {
-      padding: 9px 14px;
-      border: 0;
-      border-radius: 9px;
-      background: #22d3ee;
-      font-weight: bold;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 900px;
-    }
-
-    th,
-    td {
-      padding: 13px 10px;
-      border-bottom: 1px solid #1e293b;
-      text-align: left;
-      font-size: 14px;
-    }
-
-    th {
-      color: #67e8f9;
-    }
-
-    .amount {
-      color: #4ade80;
-      font-weight: 800;
-    }
-
-    .status {
-      padding: 5px 9px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .pending {
-      background: #854d0e;
-      color: #fde68a;
-    }
-
-    .approved {
-      background: #14532d;
-      color: #86efac;
-    }
-
-    .rejected {
-      background: #7f1d1d;
-      color: #fca5a5;
-    }
-
-    .actions {
-      display: flex;
-      gap: 7px;
-    }
-
-    .approve,
-    .reject {
-      border: 0;
-      padding: 8px 11px;
-      border-radius: 8px;
-      color: white;
-      font-weight: bold;
-    }
-
-    .approve {
-      background: #16a34a;
-    }
-
-    .reject {
-      background: #dc2626;
-    }
-
-    .empty {
-      text-align: center;
-      padding: 30px;
-      color: #94a3b8;
-    }
-
-    @media (max-width: 700px) {
-
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .header {
-        align-items: flex-start;
-      }
-
-      .logo {
-        font-size: 22px;
-      }
-
-      .container {
-        width: 96%;
-      }
-    }
-
-  </style>
-
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;font-family:Arial,sans-serif;
+  background:radial-gradient(circle at top,#172554,#020617 65%);
+  color:white;min-height:100vh
+}
+.container{width:min(1200px,96%);margin:auto;padding:25px 0 50px}
+.header,.panel-header{
+  display:flex;justify-content:space-between;
+  align-items:center;gap:12px;flex-wrap:wrap
+}
+.header{margin-bottom:25px}
+.logo{font-size:26px;font-weight:800}
+.logo span{color:#22d3ee}
+button{cursor:pointer;font-weight:bold;border:0;border-radius:9px;padding:10px 13px}
+.logout,.reject{background:#dc2626;color:white}
+.approve{background:#16a34a;color:white}
+.refresh{background:#22d3ee;color:#001018}
+.login-box{
+  max-width:420px;margin:80px auto;padding:30px;border-radius:20px;
+  background:#0f172a;border:1px solid #334155
+}
+.login-box h1{text-align:center}
+input{
+  width:100%;padding:14px;margin-top:12px;border-radius:10px;
+  border:1px solid #334155;background:#020617;color:white
+}
+.login-btn{width:100%;margin-top:18px;background:#06b6d4;padding:14px}
+.message{margin-top:15px;text-align:center;color:#f87171}
+.dashboard{display:none}
+.stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:15px;margin-bottom:25px
+}
+.stat,.panel{
+  background:rgba(15,23,42,.9);border:1px solid #334155;
+  border-radius:16px;padding:20px;margin-bottom:22px
+}
+.stat-title{color:#94a3b8;font-size:14px}
+.stat-value{font-size:28px;font-weight:800;margin-top:8px}
+.panel-header{margin-bottom:15px}
+.panel-header h2{margin:0;font-size:20px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{
+  padding:12px 10px;border-bottom:1px solid #1e293b;
+  text-align:left;font-size:14px;vertical-align:middle
+}
+th{color:#67e8f9}
+.amount{color:#4ade80;font-weight:800}
+.status{padding:5px 9px;border-radius:8px;font-size:12px;font-weight:bold}
+.pending{background:#854d0e;color:#fde68a}
+.approved{background:#14532d;color:#86efac}
+.rejected{background:#7f1d1d;color:#fca5a5}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.empty{text-align:center;padding:25px;color:#94a3b8}
+.note{color:#94a3b8;font-size:13px;line-height:1.5}
+@media(max-width:700px){
+  .stats{grid-template-columns:1fr}
+  .logo{font-size:22px}
+  .container{width:96%}
+  .panel{padding:13px}
+}
+</style>
 </head>
 
 <body>
-
 <div class="container">
 
-  <!-- LOGIN -->
-
-  <div
-    class="login-box"
-    id="loginBox"
-  >
-
+  <div class="login-box" id="loginBox">
     <h1>💰 TaskMint Admin</h1>
-
-    <input
-      id="email"
-      type="email"
-      placeholder="Admin email"
-    >
-
-    <input
-      id="password"
-      type="password"
-      placeholder="Admin password"
-    >
-
-    <button
-      class="login-btn"
-      onclick="adminLogin()"
-    >
-      🔐 Login
-    </button>
-
-    <div
-      class="message"
-      id="loginMessage"
-    ></div>
-
+    <input id="email" type="email" placeholder="Admin email" autocomplete="username">
+    <input id="password" type="password" placeholder="Admin password" autocomplete="current-password">
+    <button class="login-btn" onclick="adminLogin()">🔐 Login</button>
+    <div class="message" id="loginMessage"></div>
   </div>
 
-
-  <!-- DASHBOARD -->
-
-  <div
-    class="dashboard"
-    id="dashboard"
-  >
-
+  <div class="dashboard" id="dashboard">
     <div class="header">
-
-      <div class="logo">
-        💰 <span>TaskMint</span> Admin
-      </div>
-
-      <button
-        class="logout"
-        onclick="logout()"
-      >
-        Logout
-      </button>
-
+      <div class="logo">💰 <span>TaskMint</span> Admin</div>
+      <button class="logout" onclick="logout()">Logout</button>
     </div>
-
-
-    <!-- STATS -->
 
     <div class="stats">
-
       <div class="stat">
-
-        <div class="stat-title">
-          Total Requests
-        </div>
-
-        <div
-          class="stat-value"
-          id="totalRequests"
-        >
-          0
-        </div>
-
+        <div class="stat-title">Withdrawal Requests</div>
+        <div class="stat-value" id="totalRequests">0</div>
       </div>
-
-
       <div class="stat">
-
-        <div class="stat-title">
-          Pending
-        </div>
-
-        <div
-          class="stat-value"
-          id="pendingRequests"
-        >
-          0
-        </div>
-
+        <div class="stat-title">Pending Withdrawals</div>
+        <div class="stat-value" id="pendingRequests">0</div>
       </div>
-
-
       <div class="stat">
-
-        <div class="stat-title">
-          Pending Amount
-        </div>
-
-        <div
-          class="stat-value"
-          id="pendingAmount"
-        >
-          $0.00
-        </div>
-
+        <div class="stat-title">Pending Withdrawal Amount</div>
+        <div class="stat-value" id="pendingAmount">$0.00</div>
       </div>
-
     </div>
 
-
-    <!-- WITHDRAWALS -->
-
-    <div class="panel">
-
+    <section class="panel">
       <div class="panel-header">
-
-        <h2>
-          Withdrawal Requests
-        </h2>
-
-        <button
-          class="refresh"
-          onclick="loadWithdrawals()"
-        >
-          🔄 Refresh
-        </button>
-
+        <h2>📝 Pending Task Completions</h2>
+        <button class="refresh" onclick="loadTaskCompletions()">🔄 Refresh Tasks</button>
       </div>
+      <p class="note">
+        Verify that the user completed the required activity before approving a reward.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Completion ID</th>
+              <th>User ID</th>
+              <th>User</th>
+              <th>Task</th>
+              <th>Reward</th>
+              <th>Status</th>
+              <th>Started</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="taskTable">
+            <tr><td colspan="8" class="empty">Loading tasks...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-
-      <table>
-
-        <thead>
-
-          <tr>
-
-            <th>ID</th>
-            <th>User</th>
-            <th>Email</th>
-            <th>Amount</th>
-            <th>Method</th>
-            <th>Account</th>
-            <th>Status</th>
-            <th>Date</th>
-            <th>Action</th>
-
-          </tr>
-
-        </thead>
-
-        <tbody id="withdrawalTable">
-
-        </tbody>
-
-      </table>
-
-    </div>
-
+    <section class="panel">
+      <div class="panel-header">
+        <h2>💸 Withdrawal Requests</h2>
+        <button class="refresh" onclick="loadWithdrawals()">🔄 Refresh</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>User</th><th>Email</th><th>Amount</th>
+              <th>Method</th><th>Account</th><th>Status</th><th>Date</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="withdrawalTable"></tbody>
+        </table>
+      </div>
+    </section>
   </div>
-
 </div>
 
-
 <script>
+const ADMIN_TOKEN_KEY = "taskmint_admin_token";
 
-  const ADMIN_TOKEN_KEY =
-    "taskmint_admin_token";
+function getToken(){
+  return localStorage.getItem(ADMIN_TOKEN_KEY);
+}
 
+function escapeHtml(value){
+  return String(value ?? "-")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 
-  function getToken() {
-    return localStorage.getItem(
-      ADMIN_TOKEN_KEY
-    );
-  }
+function statusClass(status){
+  if(status === "approved" || status === "completed") return "approved";
+  if(status === "rejected") return "rejected";
+  return "pending";
+}
 
-
-  async function adminLogin() {
-
-    const email =
-      document
-        .getElementById("email")
-        .value
-        .trim();
-
-    const password =
-      document
-        .getElementById("password")
-        .value;
-
-    const message =
-      document.getElementById(
-        "loginMessage"
-      );
-
-    message.textContent = "";
-
-    try {
-
-      const r =
-        await fetch(
-          "/api/admin/login",
-          {
-            method: "POST",
-
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-
-            body: JSON.stringify({
-              email,
-              password
-            })
-          }
-        );
-
-      const data =
-        await r.json();
-
-      if (!r.ok || !data.ok) {
-
-        message.textContent =
-          data.error ||
-          "Login failed.";
-
-        return;
-      }
-
-      localStorage.setItem(
-        ADMIN_TOKEN_KEY,
-        data.token
-      );
-
-      showDashboard();
-
-    } catch (e) {
-
-      message.textContent =
-        "Server connection failed.";
+async function api(url, options = {}){
+  const response = await fetch(url,{
+    ...options,
+    headers:{
+      ...(options.headers || {}),
+      Authorization:"Bearer " + (getToken() || "")
     }
+  });
+
+  let data;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error("Server returned an invalid response.");
   }
 
-
-  function showDashboard() {
-
-    document
-      .getElementById("loginBox")
-      .style.display = "none";
-
-    document
-      .getElementById("dashboard")
-      .style.display = "block";
-
-    loadWithdrawals();
+  if(response.status === 401 || response.status === 403){
+    logout();
+    throw new Error("Admin session expired. Please log in again.");
   }
 
-
-  function logout() {
-
-    localStorage.removeItem(
-      ADMIN_TOKEN_KEY
-    );
-
-    location.reload();
+  if(!response.ok || data.ok === false){
+    throw new Error(data.error || "Request failed.");
   }
 
+  return data;
+}
 
-  async function loadWithdrawals() {
+async function adminLogin(){
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const message = document.getElementById("loginMessage");
+  message.textContent = "";
 
-    const token =
-      getToken();
+  try{
+    const response = await fetch("/api/admin/login",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({email,password})
+    });
 
-    if (!token) {
+    const data = await response.json();
+
+    if(!response.ok || !data.ok){
+      message.textContent = data.error || "Login failed.";
       return;
     }
 
-    try {
-
-      const r =
-        await fetch(
-          "/api/admin/withdrawals",
-          {
-            headers: {
-              Authorization:
-                "Bearer " + token
-            }
-          }
-        );
-
-      const data =
-        await r.json();
-
-      if (
-        r.status === 401 ||
-        r.status === 403
-      ) {
-
-        logout();
-        return;
-      }
-
-      if (!data.ok) {
-        alert(
-          data.error ||
-          "Could not load withdrawals."
-        );
-        return;
-      }
-
-      renderWithdrawals(
-        data.items || []
-      );
-
-    } catch (e) {
-
-      alert(
-        "Could not connect to server."
-      );
-    }
+    localStorage.setItem(ADMIN_TOKEN_KEY,data.token);
+    showDashboard();
+  }catch(error){
+    message.textContent = error.message || "Server connection failed.";
   }
+}
 
+function showDashboard(){
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("dashboard").style.display = "block";
+  loadWithdrawals();
+  loadTaskCompletions();
+}
 
-  function renderWithdrawals(items) {
+function logout(){
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
+  location.reload();
+}
 
-    const table =
-      document.getElementById(
-        "withdrawalTable"
-      );
+/* TASK APPROVALS */
 
+async function loadTaskCompletions(){
+  const table = document.getElementById("taskTable");
+  table.innerHTML = '<tr><td colspan="8" class="empty">Loading tasks...</td></tr>';
+
+  try{
+    const data = await api("/api/admin/task-completions");
+    const items = data.items || [];
     table.innerHTML = "";
 
-    let pending = 0;
-    let pendingAmount = 0;
+    if(!items.length){
+      table.innerHTML = '<tr><td colspan="8" class="empty">No task completions found.</td></tr>';
+      return;
+    }
 
     items.forEach(item => {
-
-      if (item.status === "pending") {
-
-        pending++;
-
-        pendingAmount +=
-          Number(item.amount || 0);
-      }
-
-      const tr =
-        document.createElement("tr");
-
-      const statusClass =
-        item.status === "approved"
-          ? "approved"
-          : item.status === "rejected"
-            ? "rejected"
-            : "pending";
-
-      const date =
-        item.created_at
-          ? new Date(
-              item.created_at
-            ).toLocaleString()
-          : "-";
+      const tr = document.createElement("tr");
+      const id = Number(item.id);
+      const userId = item.user_id ?? item.userId ?? "-";
+      const taskName = item.title ?? item.task_title ?? item.task_name ?? item.task_type ?? ("Task #" + (item.task_id ?? "-"));
+      const status = item.status || "pending";
+      const started = item.started_at ? new Date(item.started_at).toLocaleString() : "-";
 
       let actions = "-";
-
-      if (item.status === "pending") {
-
+      if(status === "pending" && Number.isSafeInteger(id) && id > 0){
         actions = `
           <div class="actions">
-
-            <button
-              class="approve"
-              onclick="approveWithdrawal(${item.id})"
-            >
-              ✓ Approve
-            </button>
-
-            <button
-              class="reject"
-              onclick="rejectWithdrawal(${item.id})"
-            >
-              ✕ Reject
-            </button>
-
-          </div>
-        `;
+            <button class="approve" onclick="processTask(${id},'approve')">✓ Approve</button>
+            <button class="reject" onclick="processTask(${id},'reject')">✕ Reject</button>
+          </div>`;
       }
 
       tr.innerHTML = `
-
-        <td>#${item.id}</td>
-
-        <td>
-          ${escapeHtml(
-            item.display_name || "-"
-          )}
-        </td>
-
-        <td>
-          ${escapeHtml(
-            item.email || "-"
-          )}
-        </td>
-
-        <td class="amount">
-          $${Number(
-            item.amount || 0
-          ).toFixed(2)}
-        </td>
-
-        <td>
-          ${escapeHtml(
-            String(
-              item.method || "-"
-            ).toUpperCase()
-          )}
-        </td>
-
-        <td>
-          ${escapeHtml(
-            item.account_number || "-"
-          )}
-        </td>
-
-        <td>
-          <span class="status ${statusClass}">
-            ${escapeHtml(
-              item.status
-            )}
-          </span>
-        </td>
-
-        <td>
-          ${escapeHtml(date)}
-        </td>
-
-        <td>
-          ${actions}
-        </td>
-
-      `;
-
+        <td>#${escapeHtml(id)}</td>
+        <td>${escapeHtml(userId)}</td>
+        <td>${escapeHtml(item.display_name || item.email || "-")}</td>
+        <td>${escapeHtml(taskName)}</td>
+        <td class="amount">$${Number(item.reward || 0).toFixed(2)}</td>
+        <td><span class="status ${statusClass(status)}">${escapeHtml(status)}</span></td>
+        <td>${escapeHtml(started)}</td>
+        <td>${actions}</td>`;
       table.appendChild(tr);
-
     });
+  }catch(error){
+    table.innerHTML = `<tr><td colspan="8" class="empty">${escapeHtml(error.message)} Check that the task-completions API exists in server.js.</td></tr>`;
+  }
+}
 
+async function processTask(id, action){
+  const promptText = action === "approve"
+    ? "Approve this task and credit its reward to the user?"
+    : "Reject this task completion?";
 
-    if (!items.length) {
+  if(!confirm(promptText)) return;
 
-      table.innerHTML = `
-        <tr>
-          <td
-            colspan="9"
-            class="empty"
-          >
-            No withdrawal requests found.
-          </td>
-        </tr>
-      `;
+  try{
+    const data = await api(`/api/admin/task-completions/${id}/${action}`,{
+      method:"POST"
+    });
+    alert(data.message || (action === "approve" ? "Task approved." : "Task rejected."));
+    await loadTaskCompletions();
+    await loadWithdrawals();
+  }catch(error){
+    alert(error.message);
+  }
+}
+
+/* WITHDRAWALS */
+
+async function loadWithdrawals(){
+  const table = document.getElementById("withdrawalTable");
+  table.innerHTML = '<tr><td colspan="9" class="empty">Loading withdrawals...</td></tr>';
+
+  try{
+    const data = await api("/api/admin/withdrawals");
+    renderWithdrawals(data.items || []);
+  }catch(error){
+    table.innerHTML = `<tr><td colspan="9" class="empty">${escapeHtml(error.message)}</td></tr>`;
+  }
+}
+
+function renderWithdrawals(items){
+  const table = document.getElementById("withdrawalTable");
+  table.innerHTML = "";
+
+  let pending = 0;
+  let pendingAmount = 0;
+
+  items.forEach(item => {
+    const id = Number(item.id);
+    const status = item.status || "pending";
+
+    if(status === "pending"){
+      pending++;
+      pendingAmount += Number(item.amount || 0);
     }
 
-
-    document.getElementById(
-      "totalRequests"
-    ).textContent = items.length;
-
-    document.getElementById(
-      "pendingRequests"
-    ).textContent = pending;
-
-    document.getElementById(
-      "pendingAmount"
-    ).textContent =
-      "$" + pendingAmount.toFixed(2);
-  }
-
-
-  async function approveWithdrawal(id) {
-
-    if (
-      !confirm(
-        "Approve this withdrawal?"
-      )
-    ) {
-      return;
+    let actions = "-";
+    if(status === "pending" && Number.isSafeInteger(id) && id > 0){
+      actions = `
+        <div class="actions">
+          <button class="approve" onclick="processWithdrawal(${id},'approve')">✓ Approve</button>
+          <button class="reject" onclick="processWithdrawal(${id},'reject')">✕ Reject</button>
+        </div>`;
     }
 
-    await processWithdrawal(
-      id,
-      "approve"
-    );
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>#${escapeHtml(id)}</td>
+      <td>${escapeHtml(item.display_name || "-")}</td>
+      <td>${escapeHtml(item.email || "-")}</td>
+      <td class="amount">$${Number(item.amount || 0).toFixed(2)}</td>
+      <td>${escapeHtml(String(item.method || "-").toUpperCase())}</td>
+      <td>${escapeHtml(item.account_number || "-")}</td>
+      <td><span class="status ${statusClass(status)}">${escapeHtml(status)}</span></td>
+      <td>${escapeHtml(item.created_at ? new Date(item.created_at).toLocaleString() : "-")}</td>
+      <td>${actions}</td>`;
+    table.appendChild(tr);
+  });
+
+  if(!items.length){
+    table.innerHTML = '<tr><td colspan="9" class="empty">No withdrawal requests found.</td></tr>';
   }
 
+  document.getElementById("totalRequests").textContent = items.length;
+  document.getElementById("pendingRequests").textContent = pending;
+  document.getElementById("pendingAmount").textContent = "$" + pendingAmount.toFixed(2);
+}
 
-  async function rejectWithdrawal(id) {
+async function processWithdrawal(id, action){
+  const message = action === "approve"
+    ? "Approve this withdrawal?"
+    : "Reject this withdrawal and refund the user's balance?";
 
-    if (
-      !confirm(
-        "Reject this withdrawal and refund the user's balance?"
-      )
-    ) {
-      return;
-    }
+  if(!confirm(message)) return;
 
-    await processWithdrawal(
-      id,
-      "reject"
-    );
+  try{
+    const data = await api(`/api/admin/withdrawals/${id}/${action}`,{
+      method:"POST"
+    });
+    alert(data.message || "Done.");
+    await loadWithdrawals();
+  }catch(error){
+    alert(error.message);
   }
+}
 
-
-  async function processWithdrawal(
-    id,
-    action
-  ) {
-
-    const token =
-      getToken();
-
-    try {
-
-      const r =
-        await fetch(
-          `/api/admin/withdrawals/${id}/${action}`,
-          {
-            method: "POST",
-
-            headers: {
-              Authorization:
-                "Bearer " + token
-            }
-          }
-        );
-
-      const data =
-        await r.json();
-
-      if (!r.ok || !data.ok) {
-
-        alert(
-          data.error ||
-          "Action failed."
-        );
-
-        return;
-      }
-
-      alert(
-        data.message ||
-        "Done."
-      );
-
-      loadWithdrawals();
-
-    } catch (e) {
-
-      alert(
-        "Server connection failed."
-      );
-    }
-  }
-
-
-  function escapeHtml(value) {
-
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
-
-
-  // Auto login if token exists
-
-  if (getToken()) {
-    showDashboard();
-  }
-
+if(getToken()){
+  showDashboard();
+}
 </script>
-
 </body>
-
 </html>
