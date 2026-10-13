@@ -1475,6 +1475,38 @@ app.post("/api/admin/login", async (req, res) => {
 });
 
 
+/* =====================================================
+       14. DATABASE READY
+    ===================================================== */
+
+    console.log(
+      "Database migration completed."
+    );
+
+    console.log(
+      "Database ready."
+    );
+
+    app.get("/api/admin/user-ids", adminAuth, async (req, res) => {
+  try {
+    const r = await pool.query(
+      "SELECT id FROM tm_users ORDER BY id ASC LIMIT 20"
+    );
+
+    res.json({
+      ok: true,
+      ids: r.rows.map(x => x.id)
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({
+      ok: false,
+      error: "Could not load user IDs"
+    });
+  }
+});
+
+
 /* =========================================================
    ADMIN TASK MANAGEMENT
 ========================================================= */
@@ -1931,10 +1963,6 @@ app.patch("/api/admin/tasks/:id/status", adminAuth, async (req, res) => {
 /* =========================================================
    ADMIN TASK COMPLETIONS
 ========================================================= */
-
-/*
-  Admin can see pending task completions.
-*/
 
 app.get(
   "/api/admin/task-completions",
@@ -3143,38 +3171,6 @@ console.log("Offerwall transactions table ready.");
     console.log(
       `Task database check: ${finalCheck.rows.length} task(s) found.`
     );
-
-
-    /* =====================================================
-       14. DATABASE READY
-    ===================================================== */
-
-    console.log(
-      "Database migration completed."
-    );
-
-    console.log(
-      "Database ready."
-    );
-
-    app.get("/api/admin/user-ids", adminAuth, async (req, res) => {
-  try {
-    const r = await pool.query(
-      "SELECT id FROM tm_users ORDER BY id ASC LIMIT 20"
-    );
-
-    res.json({
-      ok: true,
-      ids: r.rows.map(x => x.id)
-    });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({
-      ok: false,
-      error: "Could not load user IDs"
-    });
-  }
-});
 
 
     /* =====================================================
