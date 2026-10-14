@@ -1311,6 +1311,16 @@ app.post("/api/offerwall/postback", async (req, res) => {
     return res.status(403).send("Invalid signature");
   }
 
+  // Handle Offerwall.me test callbacks without crediting a user.
+if (String(data.debug) === "1" && !/^\d+$/.test(userId)) {
+  return res.status(200).send("Test received; no credit issued");
+}
+
+// Real callbacks must contain a numeric user ID.
+if (!/^\d+$/.test(userId)) {
+  return res.status(400).send("Invalid user ID");
+}
+
   const rewardValue = Number(data.reward_value || 1);
   const amount = Number(reward) / rewardValue;
 
