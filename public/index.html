@@ -1023,15 +1023,24 @@
     </div>
 
 
-    <div class="actions">
+    
+<div class="actions">
 
-      <button
-        class="btn primary"
-        onclick="openAuth('register')">
-        Get started
-      </button>
+  <button
+    class="btn ghost"
+    id="installBtn"
+    style="display:none;">
+    Install App
+  </button>
 
-    </div>
+  <button
+    class="btn primary"
+    onclick="openAuth('register')">
+    Get started
+  </button>
+
+</div>
+
 
   </nav>
 
@@ -4167,6 +4176,34 @@ function escapeHtml(
 if (token) {
   loadDashboard();
 }
+  
+let deferredInstallPrompt = null;
+
+const installBtn = document.getElementById("installBtn");
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  installBtn.style.display = "inline-block";
+});
+
+installBtn.addEventListener("click", async () => {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+
+    await deferredInstallPrompt.userChoice;
+
+    deferredInstallPrompt = null;
+    installBtn.style.display = "none";
+  } else {
+    alert("Chrome-এর তিন ডট মেনু থেকে Install app অথবা Add to Home screen নির্বাচন করুন।");
+  }
+});
+
+window.addEventListener("appinstalled", () => {
+  installBtn.style.display = "none";
+  deferredInstallPrompt = null;
+});
 
 </script>
 
