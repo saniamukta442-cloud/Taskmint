@@ -971,9 +971,27 @@
 
     }
 
+    
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#075e54">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+
   </style>
 
 </head>
+
+  
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/service-worker.js")
+        .catch((error) => console.error("Service Worker error:", error));
+    });
+  }
+</script>
+
 
 <body>
 
