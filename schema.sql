@@ -157,3 +157,29 @@ ON tm_daily_claims(user_id);
 -- Default tasks are NOT inserted here.
 -- They are created safely by server.js AFTER migration.
 -- =========================================================
+
+-- =========================================================
+-- ADGEM CONVERSIONS
+-- =========================================================
+
+CREATE TABLE IF NOT EXISTS tm_adgem_conversions (
+  id SERIAL PRIMARY KEY,
+
+  conversion_id VARCHAR(255) NOT NULL UNIQUE,
+  request_id VARCHAR(255),
+
+  user_id INTEGER NOT NULL
+    REFERENCES tm_users(id),
+
+  campaign_id VARCHAR(255),
+  conversion_type VARCHAR(40) NOT NULL,
+
+  amount NUMERIC(12,2) NOT NULL,
+  payout NUMERIC(12,4),
+
+  payload JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_tm_adgem_conversions_user
+ON tm_adgem_conversions(user_id);
