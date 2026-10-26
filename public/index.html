@@ -3248,59 +3248,47 @@ async function watchGigaPub(){
 ===================================================== */
 
 
-async function openOfferwall(){
-
-  if(!token){
-
+async function openOfferwall() {
+  if (!token) {
     openAuth("login");
-
     return;
-
   }
 
-  try{
+  const lastSurvey = Number(
+    localStorage.getItem("lastSurveyOpened") || 0
+  );
 
-    const response =
-      await fetch(
-        "/api/offerwall/url",
-        {
-          headers:{
-            Authorization:
-              "Bearer " + token
-          }
-        }
-      );
+  const cooldown = 24 * 60 * 60 * 1000;
+  const remaining = cooldown - (Date.now() - lastSurvey);
 
-    const data =
-      await response.json();
-
-    if(
-      !response.ok ||
-      !data.ok ||
-      !data.url
-    ){
-
-      throw new Error(
-        data.error ||
-        "Could not open Offerwall.me."
-      );
-
-    }
-
-    window.open(
-      data.url,
-      "_blank"
-    );
-
-  }catch(error){
-
+  if (remaining > 0) {
+    const hours = Math.ceil(remaining / (60 * 60 * 1000));
     showNotice(
-      error.message,
+      `আবার Survey করতে ${hours} ঘণ্টা অপেক্ষা করুন।`,
       "error"
     );
-
+    return;
   }
 
+  try {
+    const response = await fetch("/api/offerwall/url", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok || !data.url) {
+      throw new Error(data.error || "Could not open Survey.");
+    }
+
+    window.open(data.url, "_blank");
+    localStorage.setItem("lastSurveyOpened", String(Date.now()));
+
+  } catch (error) {
+    showNotice(error.message, "error");
+  }
 }
 
 
