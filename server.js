@@ -2713,18 +2713,17 @@ app.post(
 // CPX Research Postback
 // ===============================
 app.get("/api/cpx/postback", async (req, res) => {
-  const {
-    status,
-    trans_id,
-    user_id,
-    sub_id,
-    amount_usd,
-    hash
-  } = req.query;
+  const { status, trans_id, user_id, amount_usd, hash } = req.query;
 
   try {
-    if (!trans_id || !hash || !process.env.CPX_SECURE_HASH) {
-      return res.status(400).send("Missing parameters");
+    if (
+      !trans_id ||
+      !user_id ||
+      !hash ||
+      !process.env.CPX_SECURE_HASH ||
+      !["1", "2"].includes(String(status))
+    ) {
+      return res.status(400).send("Missing or invalid parameters");
     }
 
     const expectedHash = crypto
@@ -2732,34 +2731,32 @@ app.get("/api/cpx/postback", async (req, res) => {
       .update(`${trans_id}-${process.env.CPX_SECURE_HASH}`)
       .digest("hex");
 
+    const receivedHash = String(hash).toLowerCase();
+
     if (
-      hash.length !== expectedHash.length ||
+      !/^[a-f0-9]{32}$/.test(receivedHash) ||
       !crypto.timingSafeEqual(
-        Buffer.from(hash.toLowerCase()),
-        Buffer.from(expectedHash.toLowerCase())
+        Buffer.from(receivedHash, "hex"),
+        Buffer.from(expectedHash, "hex")
       )
     ) {
       return res.status(403).send("Invalid hash");
     }
 
-    if (String(status) !== "1") {
-      return res.status(200).send("Ignored");
-    }
-
-    const taskmintUserId = sub_id || user_id;
-    const amount = Number(amount_usd);
-
-    if (!taskmintUserId || !Number.isFinite(amount) || amount <= 0) {
-      return res.status(400).send("Invalid user or amount");
-    }
-
+    // Create table and support existing installations.
     await pool.query(`
       CREATE TABLE IF NOT EXISTS tm_cpx_transactions (
         trans_id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
         amount NUMERIC(12, 4) NOT NULL,
+        status TEXT NOT NULL DEFAULT 'credited',
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
+    `);
+
+    await pool.query(`
+      ALTER TABLE tm_cpx_transactions
+      ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'credited'
     `);
 
     const client = await pool.connect();
@@ -2767,9 +2764,101 @@ app.get("/api/cpx/postback", async (req, res) => {
     try {
       await client.query("BEGIN");
 
+      // Serialize callbacks for the same transaction ID.
+      await client.query(
+        "SELECT pg_advisory_xact_lock(hashtext($1))",
+        [String(trans_id)]
+      );
+
+      const existing = await client.query(
+        `SELECT trans_id, user_id, amount, status
+         FROM tm_cpx_transactions
+         WHERE trans_id = $1
+         FOR UPDATE`,
+        [String(trans_id)]
+      );
+
+      // Status 2: cancellation / chargeback.
+      if (String(status) === "2") {
+        if (!existing.rows.length) {
+          // Remember early cancellations so a later status 1
+          // callback cannot credit the same transaction.
+          await client.query(
+            `INSERT INTO tm_cpx_transactions
+             (trans_id, user_id, amount, status)
+             VALUES ($1, $2, 0, 'reversed')
+             ON CONFLICT (trans_id) DO NOTHING`,
+            [String(trans_id), String(user_id)]
+          );
+
+          await client.query("COMMIT");
+          return res.status(200).send("Cancellation recorded");
+        }
+
+        const transaction = existing.rows[0];
+
+        if (transaction.status === "credited") {
+          const user = await client.query(
+            "SELECT id FROM tm_users WHERE id::text = $1 FOR UPDATE",
+            [String(transaction.user_id)]
+          );
+
+          if (!user.rows.length) {
+            await client.query("ROLLBACK");
+            return res.status(404).send("User not found for reversal");
+          }
+
+          const reversedAmount = Number(transaction.amount);
+
+          await client.query(
+            `UPDATE tm_users
+             SET balance = GREATEST(balance - $1, 0),
+                 total_earned = GREATEST(total_earned - $1, 0)
+             WHERE id = $2`,
+            [reversedAmount, user.rows[0].id]
+          );
+
+          await client.query(
+            `INSERT INTO tm_transactions
+             (user_id, type, amount, description)
+             VALUES ($1, $2, $3, $4)`,
+            [
+              user.rows[0].id,
+              "cpx_reversal",
+              -reversedAmount,
+              `CPX Research reversal: ${trans_id}`
+            ]
+          );
+
+          await client.query(
+            `UPDATE tm_cpx_transactions
+             SET status = 'reversed'
+             WHERE trans_id = $1`,
+            [String(trans_id)]
+          );
+        }
+
+        await client.query("COMMIT");
+        return res.status(200).send("Cancellation processed");
+      }
+
+      // Status 1: completed offer.
+      const amount = Number(amount_usd);
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        await client.query("ROLLBACK");
+        return res.status(400).send("Invalid amount");
+      }
+
+      // Never credit a transaction already recorded or reversed.
+      if (existing.rows.length) {
+        await client.query("ROLLBACK");
+        return res.status(200).send("Already processed");
+      }
+
       const user = await client.query(
         "SELECT id FROM tm_users WHERE id::text = $1 FOR UPDATE",
-        [String(taskmintUserId)]
+        [String(user_id)]
       );
 
       if (!user.rows.length) {
@@ -2777,31 +2866,34 @@ app.get("/api/cpx/postback", async (req, res) => {
         return res.status(404).send("User not found");
       }
 
-      const inserted = await client.query(
-        `INSERT INTO tm_cpx_transactions (trans_id, user_id, amount)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (trans_id) DO NOTHING
-         RETURNING trans_id`,
-        [String(trans_id), String(user.rows[0].id), amount]
-      );
+      // User receives 50% of CPX amount_usd.
+      const userReward = Number((amount * 0.5).toFixed(4));
 
-      if (!inserted.rows.length) {
-        await client.query("ROLLBACK");
-        return res.status(200).send("Already processed");
-      }
+      await client.query(
+        `INSERT INTO tm_cpx_transactions
+         (trans_id, user_id, amount, status)
+         VALUES ($1, $2, $3, 'credited')`,
+        [String(trans_id), String(user.rows[0].id), userReward]
+      );
 
       await client.query(
         `UPDATE tm_users
          SET balance = balance + $1,
              total_earned = total_earned + $1
          WHERE id = $2`,
-        [amount, user.rows[0].id]
+        [userReward, user.rows[0].id]
       );
 
       await client.query(
-        `INSERT INTO tm_transactions (user_id, type, amount, description)
+        `INSERT INTO tm_transactions
+         (user_id, type, amount, description)
          VALUES ($1, $2, $3, $4)`,
-        [user.rows[0].id, "cpx_research", amount, `CPX Research: ${trans_id}`]
+        [
+          user.rows[0].id,
+          "cpx_research",
+          userReward,
+          `CPX Research: ${trans_id}`
+        ]
       );
 
       await client.query("COMMIT");
