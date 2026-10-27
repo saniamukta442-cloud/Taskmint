@@ -501,6 +501,117 @@ app.get("/api/me", auth, async (req, res) => {
   }
 });
 
+app.post("/api/account/delete", auth, async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { password } = req.body || {};
+
+    if (!password) {
+      return res.status(400).json({
+        ok: false,
+        error: "Password is required."
+      });
+    }
+
+    await client.query("BEGIN");
+
+    const result = await client.query(
+      `SELECT id, email, password_hash, status
+       FROM tm_users
+       WHERE id = $1
+       FOR UPDATE`,
+      [req.auth.userId]
+    );
+
+    if (!result.rows.length ||
+        result.rows[0].status !== "active") {
+      await client.query("ROLLBACK");
+      return res.status(403).json({
+        ok: false,
+        error: "Account is inactive."
+      });
+    }
+
+    const user = result.rows[0];
+    const valid = await bcrypt.compare(
+      password,
+      user.password_hash
+    );
+
+    if (!valid) {
+      await client.query("ROLLBACK");
+      return res.status(401).json({
+        ok: false,
+        error: "Incorrect password."
+      });
+    }
+
+    const pending = await client.query(
+      `SELECT 1 FROM tm_withdrawals
+       WHERE user_id = $1
+       AND LOWER(status) IN ('pending', 'processing')
+       LIMIT 1`,
+      [user.id]
+    );
+
+    if (pending.rows.length) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({
+        ok: false,
+        error: "Please resolve pending withdrawals first."
+      });
+    }
+
+    const random = crypto.randomBytes(8).toString("hex");
+
+    const deletedEmail =
+      `deleted-${user.id}-${random}@example.invalid`;
+
+    const deletedReferral =
+      `DEL${user.id}${random}`.slice(0, 32);
+
+    const randomPassword = await bcrypt.hash(
+      crypto.randomBytes(32).toString("hex"),
+      12
+    );
+
+    await client.query(
+      `UPDATE tm_users
+       SET email = $1,
+           display_name = 'Deleted User',
+           password_hash = $2,
+           referral_code = $3,
+           referred_by = NULL,
+           status = 'deleted'
+       WHERE id = $4`,
+      [
+        deletedEmail,
+        randomPassword,
+        deletedReferral,
+        user.id
+      ]
+    );
+
+    await client.query("COMMIT");
+
+    return res.json({
+      ok: true,
+      message: "Account deleted successfully."
+    });
+  } catch (e) {
+    await client.query("ROLLBACK").catch(() => {});
+    console.error("Delete account error:", e);
+
+    return res.status(500).json({
+      ok: false,
+      error: "Could not delete account."
+    });
+  } finally {
+    client.release();
+  }
+});
+
 app.get("/api/my-id", auth, async (req, res) => {
   try {
     const r = await pool.query(
