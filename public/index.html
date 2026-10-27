@@ -4172,36 +4172,56 @@ window.addEventListener("appinstalled", () => {
 <div id="notification"></div>
 
 <script>
+async function getCPXUser() {
+  const response = await fetch("/api/me", {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.ok || !data.user) {
+    throw new Error("Please log in again.");
+  }
+
+  return data.user;
+}
+
+async function openCPXWall() {
+  try {
+    const user = await getCPXUser();
+
+    const url = new URL(
+      "https://offers.cpx-research.com/index.php"
+    );
+
+    url.searchParams.set("app_id", "37671");
+    url.searchParams.set("ext_user_id", String(user.id));
+    url.searchParams.set("username", user.display_name || "");
+    url.searchParams.set("email", user.email || "");
+
+    window.open(url.toString(), "_blank");
+
+  } catch (error) {
+    console.error("CPX error:", error);
+    showNotice(error.message || "Could not open CPX.", "error");
+  }
+}
+
+function openCPXSurvey() {
+  openCPXWall();
+}
+
+function openCPXOfferwall() {
+  openCPXWall();
+}
+
 (async function initCPXNotification() {
   if (!token) return;
 
   try {
-    const response = await fetch("/api/me", {
-      headers: {
-        Authorization: "Bearer " + token
-      }
-    });
-
-    if (!response.ok) return;
-
-    const data = await response.json();
-    if (!data.ok || !data.user) return;
-
-    const user = data.user;
-
-    const script4 = {
-      div_id: "notification",
-      theme_style: 4,
-      position: 5,
-      text: "",
-      link:
-        "https://offers.cpx-research.com/index.php" +
-        "?app_id=37671" +
-        "&ext_user_id=" + encodeURIComponent(user.id) +
-        "&username=" + encodeURIComponent(user.display_name || "") +
-        "&email=" + encodeURIComponent(user.email || ""),
-      newtab: true
-    };
+    const user = await getCPXUser();
 
     window.config = {
       general_config: {
@@ -4221,7 +4241,19 @@ window.addEventListener("appinstalled", () => {
           stars_filled: "#2b2b2b"
         }
       },
-      script_config: [script4],
+      script_config: [{
+        div_id: "notification",
+        theme_style: 4,
+        position: 5,
+        text: "",
+        link:
+          "https://offers.cpx-research.com/index.php" +
+          "?app_id=37671" +
+          "&ext_user_id=" + encodeURIComponent(user.id) +
+          "&username=" + encodeURIComponent(user.display_name || "") +
+          "&email=" + encodeURIComponent(user.email || ""),
+        newtab: true
+      }],
       debug: false
     };
 
@@ -4235,53 +4267,12 @@ window.addEventListener("appinstalled", () => {
     console.error("CPX notification error:", error);
   }
 })();
-
-<script>
-async function openCPXWall() {
-  try {
-    const response = await fetch("/api/me", {
-      headers: {
-        Authorization: "Bearer " + token
-      }
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.ok || !data.user) {
-      throw new Error("Please log in again.");
-    }
-
-    const user = data.user;
-
-    const url = new URL(
-      "https://offers.cpx-research.com/index.php"
-    );
-
-    url.searchParams.set("app_id", "37671");
-    url.searchParams.set("ext_user_id", String(user.id));
-
-    window.open(url.toString(), "_blank");
-
-  } catch (error) {
-    console.error("CPX error:", error);
-    showNotice(error.message || "Could not open CPX.", "error");
-  }
-}
-
-function openCPXSurvey() {
-  openCPXWall();
-}
-
-function openCPXOfferwall() {
-  openCPXWall();
-}
 </script>
 
 <!-- End CPX Research Notification -->
- 
+
 <!-- Adsterra Social Bar -->
 <script src="https://pl31888774.profitableratecpmnetwork.com/29/0d/3b/290d3b802458602cc0f8c1abb4622cbf.js"></script>
 
 </body>
 </html>
-
