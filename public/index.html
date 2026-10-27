@@ -1690,12 +1690,23 @@
       type="email"
       placeholder="Email">
 
+    
+<div style="position:relative;">
+  <input
+    class="input"
+    id="password"
+    type="password"
+    placeholder="Password (6+ characters)"
+    style="padding-right:50px;">
 
-    <input
-      class="input"
-      id="password"
-      type="password"
-      placeholder="Password (8+ characters)">
+  <button
+    type="button"
+    onclick="togglePassword('password', this)"
+    aria-label="Show password"
+    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:20px;">
+    👁️
+  </button>
+</div>
 
 
     <input
