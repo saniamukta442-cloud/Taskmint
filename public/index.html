@@ -1445,12 +1445,11 @@
   </p>
 
   <button
-    class="btn primary"
-    style="width:100%;"
-    onclick="openOfferwall()">
-    📋 Open Surveys
-  </button>
-</div>
+  class="btn primary"
+  style="width:100%;"
+  onclick="openCPXSurvey()">
+  📋 Open CPX Surveys
+</button>
 
 
   <!-- =================================================
@@ -3224,55 +3223,6 @@ async function watchGigaPub(){
 
   }
 
-}
-
-
-/* =====================================================
-    OFFERWALL
-===================================================== */
-
-
-async function openOfferwall() {
-  if (!token) {
-    openAuth("login");
-    return;
-  }
-
-  const lastSurvey = Number(
-    localStorage.getItem("lastSurveyOpened") || 0
-  );
-
-  const cooldown = 24 * 60 * 60 * 1000;
-  const remaining = cooldown - (Date.now() - lastSurvey);
-
-  if (remaining > 0) {
-    const hours = Math.ceil(remaining / (60 * 60 * 1000));
-    showNotice(
-      `আবার Survey করতে ${hours} ঘণ্টা অপেক্ষা করুন।`,
-      "error"
-    );
-    return;
-  }
-
-  try {
-    const response = await fetch("/api/offerwall/url", {
-      headers: {
-        Authorization: "Bearer " + token
-      }
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.ok || !data.url) {
-      throw new Error(data.error || "Could not open Survey.");
-    }
-
-    window.open(data.url, "_blank");
-    localStorage.setItem("lastSurveyOpened", String(Date.now()));
-
-  } catch (error) {
-    showNotice(error.message, "error");
-  }
 }
 
 
