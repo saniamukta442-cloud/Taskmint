@@ -1201,42 +1201,23 @@ app.get("/api/my-tasks", auth, async (req, res) => {
 ========================================================= */
 
 function makeOfferwallSignedUrl(userId) {
-  const publicKey =
-    process.env.OFFERWALL_PUBLIC_KEY ||
-    process.env.OFFERWALL_API_KEY;
+  const appId = "37671";
+  const secureHash = process.env.CPX_SECURE_HASH;
 
-  const privateSecret =
-    process.env.OFFERWALL_PRIVATE_SECRET ||
-    process.env.OFFERWALL_SECRET_KEY;
-
-  if (!publicKey || !privateSecret) {
-    throw new Error("Offerwall.me credentials are missing.");
+  if (!secureHash) {
+    throw new Error("CPX_SECURE_HASH is missing.");
   }
 
   const exactUserId = String(userId);
-  const expires = String(
-    Math.floor(Date.now() / 1000) + 3600
-  );
-
-  const message =
-    "offerwall-user-v1\n" +
-    publicKey + "\n" +
-    exactUserId + "\n" +
-    expires;
-
-  const signature = crypto
-    .createHmac("sha256", privateSecret)
-    .update(message, "utf8")
+  const hash = crypto
+    .createHash("md5")
+    .update(`${exactUserId}-${secureHash}`)
     .digest("hex");
 
-  const url = new URL(
-    "https://offerwall.me/offerwall/" +
-    encodeURIComponent(publicKey) + "/" +
-    encodeURIComponent(exactUserId)
-  );
-
-  url.searchParams.set("identityExpires", expires);
-  url.searchParams.set("identitySignature", signature);
+  const url = new URL("https://offers.cpx-research.com/index.php");
+  url.searchParams.set("app_id", appId);
+  url.searchParams.set("ext_user_id", exactUserId);
+  url.searchParams.set("secure_hash", hash);
 
   return url.toString();
 }
@@ -1256,6 +1237,65 @@ app.get("/api/offerwall/url", auth, async (req, res) => {
     }
 
     await pool.query(`
+      CREATE TABLE IF NOT EXISTS tm_offerwall_cooldowns (
+        user_id TEXT PRIMARY KEY,
+        last_opened_at TIMESTAMPTZ NOT NULL
+      )
+    `);
+
+    const userId = String(result.rows[0].id);
+
+    const cooldown = await pool.query(
+      `SELECT last_opened_at
+       FROM tm_offerwall_cooldowns
+       WHERE user_id = $1`,
+      [userId]
+    );
+
+    if (cooldown.rows.length) {
+      const lastOpened = new Date(
+        cooldown.rows[0].last_opened_at
+      ).getTime();
+
+      const remaining =
+        24 * 60 * 60 * 1000 - (Date.now() - lastOpened);
+
+      if (remaining > 0) {
+        const hours = Math.floor(remaining / 3600000);
+        const minutes = Math.ceil(
+          (remaining % 3600000) / 60000
+        );
+
+        return res.status(429).json({
+          ok: false,
+          error: `আবার Survey খুলতে ${hours} ঘণ্টা ${minutes} মিনিট অপেক্ষা করুন।`
+        });
+      }
+    }
+
+    const url = makeOfferwallSignedUrl(userId);
+
+    await pool.query(
+      `INSERT INTO tm_offerwall_cooldowns
+         (user_id, last_opened_at)
+       VALUES ($1, NOW())
+       ON CONFLICT (user_id)
+       DO UPDATE SET last_opened_at = NOW()`,
+      [userId]
+    );
+
+    return res.json({ ok: true, url });
+  } catch (e) {
+    console.error("CPX URL error:", e.message);
+
+    return res.status(500).json({
+      ok: false,
+      error: "Could not create CPX Survey URL."
+    });
+  }
+});
+
+   await pool.query(`
       CREATE TABLE IF NOT EXISTS tm_offerwall_cooldowns (
         user_id TEXT PRIMARY KEY,
         last_opened_at TIMESTAMPTZ NOT NULL
