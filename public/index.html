@@ -3536,30 +3536,16 @@ function renderTask(task){
     );
 
 
-  let buttonAction =
-    `startTask(${task.id})`;
-
-  let buttonText =
-    "Start";
-
-
-  if(isGameOffer){
-
-    buttonAction =
-  "openOfferwall()";
-
-    buttonText =
-      "Game Offer";
-
-  }else if(isWatchEarn){
-
-    buttonAction =
-      "watchMonetag()";
-
-    buttonText =
-      "Watch";
-
-  }
+if (isSurvey) {
+  buttonAction = "openCPXSurvey()";
+  buttonText = "Start Survey";
+} else if (isGameOffer) {
+  buttonAction = "openCPXOfferwall()";
+  buttonText = "Game Offer";
+} else if (isWatchEarn) {
+  buttonAction = "watchMonetag()";
+  buttonText = "Watch";
+}
 
 
   return `
@@ -4249,6 +4235,50 @@ window.addEventListener("appinstalled", () => {
     console.error("CPX notification error:", error);
   }
 })();
+
+  async function openCPXWall() {
+  try {
+    const response = await fetch("/api/me", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error("Please log in again.");
+    }
+
+    const user = data.user || data;
+    const userId = user.id || user.user_id || user.telegram_id;
+
+    if (!userId) {
+      throw new Error("User ID not found.");
+    }
+
+    const url = new URL(
+      "https://wall.cpx-research.com/index.php"
+    );
+
+    url.searchParams.set("app_id", "37671");
+    url.searchParams.set("ext_user_id", String(userId));
+
+    window.open(url.toString(), "_blank", "noopener");
+
+  } catch (error) {
+    console.error("CPX error:", error);
+    showNotice(error.message || "Could not open CPX.", "error");
+  }
+}
+
+function openCPXSurvey() {
+  openCPXWall();
+}
+
+function openCPXOfferwall() {
+  openCPXWall();
+}
 </script>
 <!-- End CPX Research Notification -->
  
