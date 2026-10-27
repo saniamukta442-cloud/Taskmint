@@ -4182,6 +4182,76 @@ window.addEventListener("appinstalled", () => {
 <!-- Adsterra Popunder -->
 <script src="https://pl31642557.profitableratecpmnetwork.com/38/41/d7/3841d7eae21f5c54b901207acd0185a3.js"></script>
 
+<!-- CPX Research Notification -->
+<div id="notification"></div>
+
+<script>
+(async function initCPXNotification() {
+  if (!token) return;
+
+  try {
+    const response = await fetch("/api/me", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    if (!response.ok) return;
+
+    const data = await response.json();
+    if (!data.ok || !data.user) return;
+
+    const user = data.user;
+
+    const script4 = {
+      div_id: "notification",
+      theme_style: 4,
+      position: 5,
+      text: "",
+      link:
+        "https://offers.cpx-research.com/index.php" +
+        "?app_id=37671" +
+        "&ext_user_id=" + encodeURIComponent(user.id) +
+        "&username=" + encodeURIComponent(user.display_name || "") +
+        "&email=" + encodeURIComponent(user.email || ""),
+      newtab: true
+    };
+
+    window.config = {
+      general_config: {
+        app_id: 37671,
+        ext_user_id: String(user.id),
+        email: user.email || "",
+        username: user.display_name || "",
+        subid_1: "",
+        subid_2: ""
+      },
+      style_config: {
+        text_color: "#2b2b2b",
+        survey_box: {
+          topbar_background_color: "#45c4c6",
+          box_background_color: "white",
+          rounded_borders: false,
+          stars_filled: "#2b2b2b"
+        }
+      },
+      script_config: [script4],
+      debug: false
+    };
+
+    const script = document.createElement("script");
+    script.src =
+      "https://cdn.cpx-research.com/assets/js/script_tag_v1.1.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+  } catch (error) {
+    console.error("CPX notification error:", error);
+  }
+})();
+</script>
+<!-- End CPX Research Notification -->
+ 
 <!-- Adsterra Social Bar -->
 <script src="https://pl31888774.profitableratecpmnetwork.com/29/0d/3b/290d3b802458602cc0f8c1abb4622cbf.js"></script>
 
