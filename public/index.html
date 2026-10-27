@@ -4018,22 +4018,50 @@ function escapeHtml(
 ===================================================== */
 
 
-
-
 if (token) {
   loadDashboard();
 }
- async function deleteAccount() {
+ 
+async function deleteAccount() {
   const confirmed = confirm(
     "আপনি কি নিশ্চিতভাবে আপনার TaskMint অ্যাকাউন্ট ডিলিট করতে চান? এই কাজটি ফেরানো যাবে না।"
   );
 
   if (!confirmed) return;
 
-  alert(
-    "Account deletion API এখনো যোগ করা হয়নি।"
+  const password = prompt(
+    "অ্যাকাউন্ট ডিলিট নিশ্চিত করতে আপনার পাসওয়ার্ড দিন:"
   );
-} 
+
+  if (!password) return;
+
+  try {
+    const response = await fetch("/api/account/delete", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ password })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.error || "অ্যাকাউন্ট ডিলিট করা যায়নি।");
+      return;
+    }
+
+    localStorage.removeItem("taskmint_token");
+    alert("আপনার অ্যাকাউন্ট ডিলিট করা হয়েছে।");
+    window.location.reload();
+
+  } catch (error) {
+    console.error("Delete account error:", error);
+    alert("সার্ভারের সঙ্গে সংযোগ করা যায়নি। আবার চেষ্টা করুন।");
+  }
+}
+
 let deferredInstallPrompt = null;
 
 const installBtn = document.getElementById("installBtn");
