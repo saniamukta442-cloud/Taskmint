@@ -69,7 +69,8 @@ function signAdminToken() {
   );
 }
 
-function auth(req, res, next) {
+
+async function auth(req, res, next) {
   const header = req.headers.authorization || "";
 
   const token = header.startsWith("Bearer ")
@@ -85,14 +86,41 @@ function auth(req, res, next) {
 
   try {
     req.auth = jwt.verify(token, JWT_SECRET);
+
+    const result = await pool.query(
+      "SELECT status FROM tm_users WHERE id = $1",
+      [req.auth.userId]
+    );
+
+    if (
+      result.rows.length === 0 ||
+      result.rows[0].status !== "active"
+    ) {
+      return res.status(403).json({
+        ok: false,
+        error: "Account is inactive or deleted"
+      });
+    }
+
     next();
-  } catch {
-    return res.status(401).json({
+  } catch (err) {
+    if (err.name === "JsonWebTokenError" ||
+        err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        ok: false,
+        error: "Session expired. Please log in again."
+      });
+    }
+
+    console.error("Authentication error:", err);
+
+    return res.status(500).json({
       ok: false,
-      error: "Session expired. Please log in again."
+      error: "Authentication failed"
     });
   }
 }
+
 
 function adminAuth(req, res, next) {
   const header = req.headers.authorization || "";
