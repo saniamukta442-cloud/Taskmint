@@ -4023,7 +4023,17 @@ function escapeHtml(
 if (token) {
   loadDashboard();
 }
-  
+ async function deleteAccount() {
+  const confirmed = confirm(
+    "আপনি কি নিশ্চিতভাবে আপনার TaskMint অ্যাকাউন্ট ডিলিট করতে চান? এই কাজটি ফেরানো যাবে না।"
+  );
+
+  if (!confirmed) return;
+
+  alert(
+    "Account deletion API এখনো যোগ করা হয়নি।"
+  );
+} 
 let deferredInstallPrompt = null;
 
 const installBtn = document.getElementById("installBtn");
