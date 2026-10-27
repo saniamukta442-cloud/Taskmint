@@ -3455,37 +3455,26 @@ async function loadTasks(){
 }
 
 
-/* =====================================================
-   RENDER INDIVIDUAL TASK
-===================================================== */
 
-function renderTask(task){
+/* RENDER INDIVIDUAL TASK */
 
-  const titleRaw =
-    String(
-      task.title || "Task"
-    ).trim();
+function renderTask(task) {
+  const titleRaw = String(task.title || "Task").trim();
+  const titleLower = titleRaw.toLowerCase();
 
-  const titleLower =
-    titleRaw.toLowerCase();
+  const typeRaw = String(task.task_type || "").trim();
+  const typeLower = typeRaw.toLowerCase();
 
-  const typeRaw =
-    String(
-      task.task_type || ""
-    ).trim();
-
-  const typeLower =
-    typeRaw.toLowerCase();
-
+  const isSurvey =
+    titleLower.includes("survey") ||
+    typeLower === "survey" ||
+    typeLower.includes("cpx");
 
   const isGameOffer =
     titleLower.includes("game offer") ||
     titleLower.includes("game offers") ||
-    typeLower === "game_offer" ||
     typeLower.includes("game_offer") ||
-    typeLower === "offerwall" ||
     typeLower.includes("offerwall");
-
 
   const isWatchEarn =
     titleLower.includes("watch & earn") ||
@@ -3495,119 +3484,56 @@ function renderTask(task){
     typeLower === "watch_and_earn" ||
     typeLower === "video";
 
+  let reward = Number(task.reward || 0).toFixed(2);
 
-  let reward =
-    Number(
-      task.reward || 0
-    ).toFixed(2);
-
-
-  if(isWatchEarn){
-
+  if (isWatchEarn) {
     reward = "0.50";
-
   }
 
+  const icon = escapeHtml(task.icon || "🎯");
+  const title = escapeHtml(titleRaw);
+  const description = escapeHtml(
+    task.description || "Complete this task to earn a reward."
+  );
+  const type = escapeHtml(typeRaw.replaceAll("_", " ").toUpperCase());
 
-  const icon =
-    escapeHtml(
-      task.icon || "🎯"
-    );
+  let buttonAction = `startTask(${Number(task.id)})`;
+  let buttonText = "Start";
 
-
-  const title =
-    escapeHtml(
-      titleRaw
-    );
-
-
-  const description =
-    escapeHtml(
-      task.description ||
-      "Complete this task to earn a reward."
-    );
-
-
-  const type =
-    escapeHtml(
-      typeRaw
-        .replaceAll("_"," ")
-        .toUpperCase()
-    );
-
-
-if (isSurvey) {
-  buttonAction = "openCPXSurvey()";
-  buttonText = "Start Survey";
-} else if (isGameOffer) {
-  buttonAction = "openCPXOfferwall()";
-  buttonText = "Game Offer";
-} else if (isWatchEarn) {
-  buttonAction = "watchMonetag()";
-  buttonText = "Watch";
-}
-
+  if (isSurvey) {
+    buttonAction = "openCPXSurvey()";
+    buttonText = "Start Survey";
+  } else if (isGameOffer) {
+    buttonAction = "openCPXOfferwall()";
+    buttonText = "Game Offer";
+  } else if (isWatchEarn) {
+    buttonAction = "watchMonetag()";
+    buttonText = "Watch";
+  }
 
   return `
-
-    <div
-      class="taskCard"
-      id="task-card-${task.id}">
-
-
+    <div class="taskCard" id="task-card-${Number(task.id)}">
       <div class="taskTop">
-
-        <div class="taskIcon">
-          ${icon}
-        </div>
-
-
-        <div class="taskReward">
-          +$${reward}
-        </div>
-
+        <div class="taskIcon">${icon}</div>
+        <div class="taskReward">+$${reward}</div>
       </div>
 
-
-      <div class="taskTitle">
-        ${title}
-      </div>
-
-
-      <div class="taskDescription">
-        ${description}
-      </div>
-
+      <div class="taskTitle">${title}</div>
+      <div class="taskDescription">${description}</div>
 
       <div class="taskMeta">
-
-        <span class="taskType">
-          ${type}
-        </span>
-
-
+        <span class="taskType">${type}</span>
         <button
           class="taskStartBtn"
-          id="task-btn-${task.id}"
+          id="task-btn-${Number(task.id)}"
           onclick="${buttonAction}">
-
           ${buttonText}
-
         </button>
-
       </div>
 
-
-      <div
-        id="task-status-${task.id}"
-        style="margin-top:10px;">
-      </div>
-
-
+      <div id="task-status-${Number(task.id)}" style="margin-top:10px;"></div>
     </div>
-
   `;
-
 }
 
 
