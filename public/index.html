@@ -4236,35 +4236,31 @@ window.addEventListener("appinstalled", () => {
   }
 })();
 
-  async function openCPXWall() {
+<script>
+async function openCPXWall() {
   try {
     const response = await fetch("/api/me", {
       headers: {
-        Authorization: `Bearer ${token}`
+        Authorization: "Bearer " + token
       }
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!response.ok || !data.ok || !data.user) {
       throw new Error("Please log in again.");
     }
 
-    const user = data.user || data;
-    const userId = user.id || user.user_id || user.telegram_id;
-
-    if (!userId) {
-      throw new Error("User ID not found.");
-    }
+    const user = data.user;
 
     const url = new URL(
-      "https://wall.cpx-research.com/index.php"
+      "https://offers.cpx-research.com/index.php"
     );
 
     url.searchParams.set("app_id", "37671");
-    url.searchParams.set("ext_user_id", String(userId));
+    url.searchParams.set("ext_user_id", String(user.id));
 
-    window.open(url.toString(), "_blank", "noopener");
+    window.open(url.toString(), "_blank");
 
   } catch (error) {
     console.error("CPX error:", error);
@@ -4280,6 +4276,7 @@ function openCPXOfferwall() {
   openCPXWall();
 }
 </script>
+
 <!-- End CPX Research Notification -->
  
 <!-- Adsterra Social Bar -->
