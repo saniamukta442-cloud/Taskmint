@@ -4084,6 +4084,7 @@ window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   deferredInstallPrompt = event;
   installBtn.style.display = "inline-block";
+  installBtn.textContent = "Install App";
 });
 
 installBtn.addEventListener("click", async () => {
