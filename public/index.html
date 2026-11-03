@@ -3475,13 +3475,14 @@ function renderTask(task) {
   let buttonAction = `startTask(${Number(task.id)})`;
   let buttonText = "Start";
 
-  if (isSurvey) {
+    if (isSurvey) {
     buttonAction = "openCPXSurvey()";
     buttonText = "Start Survey";
+
   } else if (isGameOffer) {
-  buttonAction = "openGameOffer()";
-  buttonText = "Game Offer";
-}
+    buttonAction = "openGameOffer()";
+    buttonText = "Game Offer";
+
   } else if (isWatchEarn) {
     buttonAction = "watchMonetag()";
     buttonText = "Watch";
