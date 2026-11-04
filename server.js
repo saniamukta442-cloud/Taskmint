@@ -3553,6 +3553,35 @@ console.log("Offerwall transactions table ready.");
 
 
     /* =====================================================
+   ADOMOBI POSTBACK
+===================================================== */
+
+app.all("/api/adomobi/postback", async (req, res) => {
+  try {
+    const data = {
+      ...req.query,
+      ...req.body
+    };
+
+    console.log("Adomobi postback received:", {
+      aff_click_id: data.aff_click_id,
+      source: data.source,
+      offer_id: data.offer_id,
+      event_name: data.event_name,
+      sub_id1: data.sub_id1,
+      sub_id2: data.sub_id2
+    });
+
+    return res.status(200).send("OK");
+
+  } catch (error) {
+    console.error("Adomobi postback error:", error);
+    return res.status(500).send("ERROR");
+  }
+});
+
+
+    /* =====================================================
        15. SPA FALLBACK
     ===================================================== */
 
