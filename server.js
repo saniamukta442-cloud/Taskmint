@@ -3582,6 +3582,48 @@ app.all("/api/adomobi/postback", async (req, res) => {
 
 
     /* =====================================================
+   ADOMOBI OFFERS API
+===================================================== */
+
+app.get("/api/adomobi/offers", auth, async (req, res) => {
+  try {
+    const apiUrl = process.env.ADOMOBI_API_URL;
+
+    if (!apiUrl) {
+      return res.status(500).json({
+        success: false,
+        message: "Adomobi API URL is not configured"
+      });
+    }
+
+    const response = await fetch(apiUrl);
+
+    if (!response.ok) {
+      return res.status(502).json({
+        success: false,
+        message: "Adomobi API request failed"
+      });
+    }
+
+    const result = await response.json();
+
+    return res.json({
+      success: true,
+      offers: result
+    });
+
+  } catch (error) {
+    console.error("Adomobi offers error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not load Adomobi offers"
+    });
+  }
+});
+
+
+    /* =====================================================
        15. SPA FALLBACK
     ===================================================== */
 
