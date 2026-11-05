@@ -4128,7 +4128,37 @@ function togglePassword(inputId, button) {
 <div id="notification"></div>
 
 <script>
-async function getCPXUser() {
+async function openGameOffer() {
+  try {
+    const response = await fetch("/api/adomobi/offers", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Could not load Adomobi offers."
+      );
+    }
+
+    console.log("Adomobi Offers:", data);
+
+    alert(JSON.stringify(data, null, 2));
+
+  } catch (error) {
+    console.error("Adomobi error:", error);
+
+    showNotice(
+      error.message || "Could not open Game Offers.",
+      "error"
+    );
+  }
+}
+  
+  async function getCPXUser() {
   const response = await fetch("/api/me", {
     headers: {
       Authorization: "Bearer " + token
