@@ -4080,29 +4080,23 @@ async function deleteAccount() {
   }
 }
 
-let deferredInstallPrompt = null;
-console.log("Install prompt ready:", !!deferredInstallPrompt);  
-
+let deferredInstallPrompt = window.deferredInstallPrompt || null;
 const installBtn = document.getElementById("installBtn");
 
-window.addEventListener("beforeinstallprompt", (event) => {
-  event.preventDefault();
-  deferredInstallPrompt = event;
+if (deferredInstallPrompt) installBtn.style.display = "inline-block";
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
   installBtn.style.display = "inline-block";
-  installBtn.textContent = "Install App";
 });
 
 installBtn.addEventListener("click", async () => {
-  if (deferredInstallPrompt) {
-    deferredInstallPrompt.prompt();
-
-    await deferredInstallPrompt.userChoice;
-
-    deferredInstallPrompt = null;
-    installBtn.style.display = "none";
-  } else {
-    alert("Chrome-এর তিন ডট মেনু থেকে Install app অথবা Add to Home screen নির্বাচন করুন।");
-  }
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt = null;
+  installBtn.style.display = "none";
 });
 
 window.addEventListener("appinstalled", () => {
