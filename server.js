@@ -1437,63 +1437,75 @@ app.get("/api/offerwall/url", auth, async (req, res) => {
 
 
 /* =========================================================
-   OFFERWALL.ME REWARD POSTBACK
+   THEOREMREACH REWARD CALLBACK
 ========================================================= */
 
-app.post("/api/offerwall/postback", async (req, res) => {
+app.all("/api/theoremreach/callback", async (req, res) => {
   const data = { ...req.query, ...req.body };
 
-  const userId = String(data.subId || "");
-  const transId = String(data.transId || "");
-  const reward = String(data.reward || "");
-  const status = String(data.status || "1");
-  const signature = String(data.signature || "");
-  console.log("Offerwall test data:", data);
-  const secret =
-  process.env.OFFERWALL_PRIVATE_SECRET ||
-  process.env.OFFERWALL_SECRET_KEY;
+  const userId = String(data.user_id || "");
+  const transId = String(data.tx_id || data.transaction_id || "");
+  const reward = Number(data.reward);
+  const signature = String(data.hash || "");
+  const secret = process.env.THEOREMREACH_SECRET_KEY;
 
-  if (!secret || !userId || !transId || !reward || !signature) {
+  if (!secret || !userId || !transId || !signature) {
     return res.status(400).send("Missing parameters");
   }
 
-  const expected = crypto
-    .createHash("md5")
-    .update(userId + transId + reward + secret)
-    .digest("hex");
+  // Verify TheoremReach callback signature.
+  const [pathname, rawQuery = ""] = req.originalUrl.split("?");
+  const unsignedParams = rawQuery
+    .split("&")
+    .filter(pair => {
+      const key = decodeURIComponent(pair.split("=")[0]);
+      return key !== "hash";
+    });
 
-  const a = Buffer.from(signature.toLowerCase());
-  const b = Buffer.from(expected);
-  
-  console.log("Signature check:", {
-  hasSecret: Boolean(secret),
-  hasSignature: Boolean(signature),
-  hasUserId: Boolean(userId),
-  hasTransId: Boolean(transId),
-  hasReward: Boolean(reward),
-  signatureLength: signature.length
-});
+  const signedUrl =
+    "https://taskmint-7vdn.onrender.com" +
+    pathname +
+    (unsignedParams.length ? "?" + unsignedParams.join("&") : "");
 
-  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
-    return res.status(403).send("Invalid signature");
+  const expectedHash = crypto
+    .createHmac("sha1", secret)
+    .update(signedUrl)
+    .digest("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "")
+    .replace(/\n/g, "");
+
+  const received = Buffer.from(signature);
+  const expected = Buffer.from(expectedHash);
+
+  if (
+    received.length !== expected.length ||
+    !crypto.timingSafeEqual(received, expected)
+  ) {
+    console.error("TheoremReach: Invalid hash");
+    return res.status(403).send("Invalid hash");
   }
 
-  // Handle Offerwall.me test callbacks without crediting a user.
-if (String(data.debug) === "1" && !/^\d+$/.test(userId)) {
-  return res.status(200).send("Test received; no credit issued");
-}
+  // Test callbacks must never credit users.
+  if (String(data.debug).toLowerCase() === "true") {
+    return res.status(200).send("Test received; no credit");
+  }
 
-// Real callbacks must contain a numeric user ID.
-if (!/^\d+$/.test(userId)) {
-  return res.status(400).send("Invalid user ID");
-}
+  if (!/^\d+$/.test(userId)) {
+    return res.status(400).send("Invalid user ID");
+  }
 
-  const rewardValue = Number(data.reward_value || 1);
-  const amount = Number(reward) / rewardValue;
-
-  if (!Number.isFinite(amount) || amount <= 0 ||
-      !Number.isFinite(rewardValue) || rewardValue <= 0) {
+  if (!Number.isFinite(reward) || reward <= 0) {
     return res.status(400).send("Invalid reward");
+  }
+
+  // 1000 Coins = $1
+  const amount = Number((reward / 1000).toFixed(2));
+  const isReversal = String(data.reversal).toLowerCase() === "true";
+
+  if (amount <= 0) {
+    return res.status(400).send("Invalid amount");
   }
 
   const client = await pool.connect();
@@ -1501,14 +1513,13 @@ if (!/^\d+$/.test(userId)) {
   try {
     await client.query("BEGIN");
 
-    // Avoid duplicate credits for the same Offerwall transaction.
     await client.query(`
-      CREATE TABLE IF NOT EXISTS tm_offerwall_transactions (
+      CREATE TABLE IF NOT EXISTS tm_theoremreach_transactions (
         trans_id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
         amount NUMERIC(12,2) NOT NULL,
         status VARCHAR(20) NOT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
@@ -1523,12 +1534,12 @@ if (!/^\d+$/.test(userId)) {
     }
 
     const old = await client.query(
-      "SELECT * FROM tm_offerwall_transactions WHERE trans_id=$1 FOR UPDATE",
+      "SELECT * FROM tm_theoremreach_transactions WHERE trans_id=$1 FOR UPDATE",
       [transId]
     );
 
-    // A reversal/chargeback: status 2.
-    if (status === "2") {
+    // Handle reversal.
+    if (isReversal) {
       if (old.rows.length && old.rows[0].status === "credited") {
         const credited = Number(old.rows[0].amount);
 
@@ -1542,17 +1553,20 @@ if (!/^\d+$/.test(userId)) {
 
         await client.query(
           `INSERT INTO tm_transactions (user_id, type, amount, description)
-           VALUES ($1, 'offerwall_reversal', $2, $3)`,
-          [userId, -credited, `Offerwall reversal: ${transId}`]
+           VALUES ($1, 'theoremreach_reversal', $2, $3)`,
+          [userId, -credited, `TheoremReach reversal: ${transId}`]
         );
 
         await client.query(
-          "UPDATE tm_offerwall_transactions SET status='reversed' WHERE trans_id=$1",
+          `UPDATE tm_theoremreach_transactions
+           SET status='reversed'
+           WHERE trans_id=$1`,
           [transId]
         );
       } else if (!old.rows.length) {
         await client.query(
-          `INSERT INTO tm_offerwall_transactions (trans_id, user_id, amount, status)
+          `INSERT INTO tm_theoremreach_transactions
+           (trans_id, user_id, amount, status)
            VALUES ($1, $2, $3, 'reversed')`,
           [transId, userId, amount]
         );
@@ -1562,20 +1576,15 @@ if (!/^\d+$/.test(userId)) {
       return res.status(200).send("ok");
     }
 
-    // Ignore unexpected statuses.
-    if (status !== "1") {
-      await client.query("ROLLBACK");
-      return res.status(400).send("Invalid status");
-    }
-
-    // Already processed: never credit twice.
+    // Never credit the same transaction twice.
     if (old.rows.length) {
       await client.query("COMMIT");
-      return res.status(200).send("ok");
+      return res.status(200).send("Already processed");
     }
 
     await client.query(
-      `INSERT INTO tm_offerwall_transactions (trans_id, user_id, amount, status)
+      `INSERT INTO tm_theoremreach_transactions
+       (trans_id, user_id, amount, status)
        VALUES ($1, $2, $3, 'credited')`,
       [transId, userId, amount]
     );
@@ -1591,15 +1600,17 @@ if (!/^\d+$/.test(userId)) {
     await client.query(
       `INSERT INTO tm_transactions (user_id, type, amount, description)
        VALUES ($1, 'task_reward', $2, $3)`,
-      [userId, amount, `Offerwall.me reward: ${String(data.offer_name || transId)}`]
+      [userId, amount, `TheoremReach reward: ${transId}`]
     );
 
     await client.query("COMMIT");
+    console.log("TheoremReach reward credited:", userId, amount);
+
     return res.status(200).send("ok");
 
   } catch (e) {
     await client.query("ROLLBACK");
-    console.error("Offerwall postback error:", e);
+    console.error("TheoremReach callback error:", e);
     return res.status(500).send("Server error");
   } finally {
     client.release();
